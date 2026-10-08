@@ -1,0 +1,468 @@
+#
+# Makefile
+#
+# DVD
+#
+
+PATH		:= $(PATH) .
+VPATH		= MIPS
+
+.SUFFIXES:
+.PHONY:		force oldold
+
+sinclude	Makefile.utl
+
+ENDIAN          := LITTLE
+#ENDIAN         := BIG
+
+ifeq "$(ENDIAN)" "LITTLE"
+  TARGET        = mipsel-elf
+  ENDIAN        = 
+  LIBDIR        = mipsel-elf
+  GOAL          = romL.obj
+  LDSCRIPT	= dvdL.ld
+  CFLAGS_ENDIAN = -DLITTLE_ENDIAN
+else
+  TARGET        = mips-ecoff
+  ENDIAN        =
+  LIBDIR        = ECOFF
+  GOAL          = romB.obj
+  LDSCRIPT	= dvdB.ld
+  CFLAGS_ENDIAN = -DBIG_ENDIAN
+endif
+
+CC		= gcc
+AS		= as
+LD		= ld
+OBJDUMP		= objdump
+
+#PREFIX		= $(TARGET)-
+
+INIT0		= MIPS/init0.o
+ROMINIT0	= MIPS/rominit.o
+ROMFINIT0	= MIPS/romfinit.o
+CRT0		= MIPS/crt0.o
+
+XCC		= $(PREFIX)gcc $(ENDIAN)
+XAS		= $(PREFIX)as
+XLD		= $(PREFIX)ld
+XAR		= $(PREFIX)ar
+XOBJDUMP	= $(PREFIX)objdump $(ENDIAN)
+
+INCLUDE_DIR	= -I. -Iemu/ -Inav/
+
+#BITSTREAM	= AMGframe
+BITSTREAM	= sonyct3
+
+CFLAGS_MACHINE	= -mlx4080 -msoft-float -membedded-data
+
+CFLAGS_C	= \
+		-g \
+		-Os \
+		-fno-writable-strings \
+		-fstrength-reduce \
+		-fthread-jumps \
+		-W -Wall \
+		$(INCLUDE_DIR)
+
+		# -fforce-mem \
+		# -fforce-addr \ 
+
+CFLAGS_S	= \
+		-g1 \
+		-O2 \
+		$(INCLUDE_DIR)
+
+#
+# generic flags
+#
+
+#
+#  __EMU__ / __BORLANDC__
+#  used to define atapi interface
+#
+#  VIDEO_ONLY
+#  disable audio functionality
+#
+#  SIMULATION/EMULATION/FINALSYS
+#  setup environment according to debugging configuration
+#
+#  SIMULATION_FAST
+#  accelerate some parameter during SIMULATION (or testing)
+#
+
+CFLAGS_SUPPORT	=
+CFLAGS_WORK	= -D__EMU__ -DFINALSYS
+#CFLAGS_WORK	= -D__EMU__ -DVIDEO_ONLY -DEMULATION
+
+CFLAGS_COMPILE	= \
+		-DBIT=$(BITSTREAM) \
+		$(CFLAGS_SUPPORT) $(CFLAGS_WORK) $(CFLAGS_ENDIAN)
+		
+CFLAGS_MIPS	= $(CFLAGS_MACHINE) $(CFLAGS_C) $(CFLAGS_COMPILE)
+CFLAGS_MIPS_S	= $(CFLAGS_MACHINE) $(CFLAGS_S) $(CFLAGS_COMPILE)
+
+LIBRARIES	= libdrv.a libdsp3.a libsrc.a libmon.a
+LDFLAGS_LIB	= -ldrv -ldsp3 -lmon -lbits -lnav -lcss -latapi -lauth -lkern -lm -lstd 
+
+
+LDFLAGS		= -nostartfiles -T $(LDSCRIPT) -L. -L$(LIBDIR) $(LDFLAGS_LIB) --cref 
+		# -Wl,--sort-common
+
+#cyue: HDD ADDED
+SOURCES_HDD = \
+		hdd_play.c\
+
+
+SOURCES_AUD	= \
+		dsp3.c	\
+		audif.c	\
+
+
+SOURCES_IOP	= \
+		gpio.c \
+		iop.c \
+		auddac.c \
+		audctrl.c \
+
+
+SOURCES_KERN	= \
+	        kinf.c \
+	       	kernel.c \
+		avd.c \
+
+
+SOURCES_AVB	= \
+		avb.c \
+		avb_if.c
+
+
+SOURCES		= \
+		sysmain.c \
+		sysmain2.c\
+		flash.c \
+		sup.c \
+		title.c \
+		databuf.c \
+		mainproc.c \
+		macro.c \
+		reset.c \
+		sleep.c \
+		uart.c\
+		osd1.c \
+		ir.c \
+		emu_io.c \
+		util.c\
+		font_offset.c\
+		vfd.c\
+		sound.c\
+		read.c\
+		osdutil.c\
+		prog.c\
+		setup.c\
+		disp.c\
+		book.c\
+		search.c\
+		ircmd.c\
+		polling.c\
+		v11.c\
+		preview.c\
+		safe.c\
+		fsGUI.c\
+		fsNAV.c\
+		fsTXT.c\
+		ThumbNav.c\
+		riscint1.c\
+		riscint2.c\
+		riscint3.c\
+		jpegtest.c\
+		score.c\
+		NESInit.c\
+		osdfont_decompress.c\
+        ircode.c\
+        radio.c\
+		$(SOURCES_AUD) \
+		$(SOURCES_HDD) \
+		$(SOURCES_IOP)\
+		$(SOURCES_KERN)
+
+SOURCES_S	=
+		
+DEPENDS_C	= \
+		$(addprefix MIPS/,$(SOURCES:.c=.d))
+
+DEPENDS_S	= \
+		$(addprefix MIPS/,$(SOURCES_S:.S=.d))
+
+DEPENDS		= $(DEPENDS_C) $(DEPENDS_S)
+
+OBJS		= $(DEPENDS:.d=.o)
+ASMS		= $(DEPENDS:.d=.s))
+DISASMS		= $(DEPENDS:.d=.dis))
+
+.PHONY:		all clean depends bak debug tar
+
+
+
+#
+# main target
+#
+all: $(GOAL)
+	@$(ECHO) \"all made\"
+	copy romL.bin rom.bin
+	checksum
+
+clean:
+	@$(ECHO) \"remove all generated files\"
+	@-$(RM) -f core *.o *.d *.map *.dis *.obj romL.* MIPS/*
+	@cd clib; make clean
+	@cd kernel; make clean
+	@cd emu; make clean
+	@cd nav; make clean
+
+depends: $(DEPENDS)
+	@$(ECHO) \"dependency made\"
+
+
+#
+# LIBRARY
+# libdrv.a
+#
+SOURCES_DRVLIB	= \
+		adv7176.c \
+		sp711.c \
+		sp721.c \
+		cs8403a.c
+
+DEPS_DRVLIB	= $(addprefix MIPS/,$(SOURCES_DRVLIB:.c=.d))
+OBJS_DRVLIB	= $(DEPS_DRVLIB:.d=.o)
+
+libdrv.a : $(OBJS_DRVLIB)
+	$(XAR) -cr $@ $(OBJS_DRVLIB)
+
+sinclude $(DEPS_DRVLIB)
+
+
+#
+# LIBRARY
+# libmon.a
+#
+SOURCES_MONLIB = \
+		monitor.c 
+
+DEPS_MONLIB	= $(addprefix MIPS/,$(SOURCES_MONLIB:.c=.d))
+OBJS_MONLIB	= $(DEPS_MONLIB:.d=.o)
+
+libmon.a : $(OBJS_MONLIB)
+	$(XAR) -cr $@ $(OBJS_MONLIB)
+
+sinclude $(DEPS_MONLIB)
+
+
+#
+# LIBRARY
+# libdsp3.a
+#
+SOURCES_DSP3LIB	= \
+	        dsp3jpg.c \
+	        dsp3nes.c \
+		dsp3ac3.c \
+		dsp3dts.c \
+		dsp3cd.c \
+		dsp3mp3.c \
+		dsp3mp3p.c\
+		dsp3mp3d.c\
+		dsp3lpcm.c \
+	        dsp3spdif.c \
+	        dsp3dtscd.c \
+
+DEPS_DSP3LIB	= $(addprefix MIPS/,$(SOURCES_DSP3LIB:.c=.d))
+OBJS_DSP3LIB	= $(DEPS_DSP3LIB:.d=.o)
+
+libdsp3.a : $(OBJS_DSP3LIB)
+	$(XAR) -cr $@ $(OBJS_DSP3LIB)
+
+sinclude $(DEPS_DSP3LIB)
+
+
+#
+#
+#
+$(GOAL): %.obj: $(LIBRARIES) $(OBJS) $(INIT0) $(CRT0) $(ROMINIT0) $(LDSCRIPT)
+	@$(ECHO) \"linking..\"
+	@$(XCC) $(CFLAGS_MIPS) -o $@ $(INIT0) $(OBJS) $(CRT0) $(ROMINIT0) $(LDFLAGS) -Wl,-Map,$*.map
+	@$(ECHO) \"dumping..\"
+	@$(XOBJDUMP) -j .rom1 -s $@ > $*.dump
+	@$(XOBJDUMP) -j .ram1 -s $@ >> $*.dump
+	@$(XOBJDUMP) -j .rom2 -s $@ >> $*.dump
+	@$(XOBJDUMP) -j .ramflash -s $@ >> $*.dump
+	@$(ECHO) \"packaging..\"
+	@$(DUMP2BIN) $*.dump $*.bin
+
+%.dis : %.obj
+	@$(ECHO) \"disassembling..\"
+	@$(XOBJDUMP) --disassemble -j .rom1 --source $< > $@
+
+MIPS:	
+	mkdir MIPS
+
+MIPS/%.d : %.c
+	@$(ECHO) \"mkdep $<\"
+	@$(XCC) $(CFLAGS_MIPS) -M $< > depend.tmp
+	@$(MAKEDEP) depend.tmp $@
+
+MIPS/%.o : MIPS/%.d
+
+MIPS/%.o : %.c
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -c -o $@ $<
+
+MIPS/%.o : %.S
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS_S) -c -o $@ $<
+
+MIPS/%.s : %.c
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -S -fverbose-asm -o $@ $<
+
+MIPS/%.dis : %.o
+	@$(XOBJDUMP) --source -d --syms $< > $@
+
+
+#
+# special commands.
+#
+MIPS/init0.o : user_init.h
+
+#ioprom.inc: ioprom.bin
+#	binobj IOPcode ioprom.bin > ioprom.inc
+
+DSP3BIN	= \
+	dsp3dts.bin	\
+	dsp3mp3.bin	\
+	dsp3mp3p.bin \
+	dsp3mp3d.bin \
+	dsp3cd.bin	\
+	dsp3lpcm.bin	\
+	dsp3ac3.bin	\
+	dsp3jpg.bin	\
+	dsp3nes.bin	\
+	dsp3spdif.bin	\
+	dsp3dtscd.bin	\
+
+DSP3INC	= $(DSP3BIN:.bin=.inc)
+DSP3_C	= $(DSP3BIN:.bin=.c)
+
+$(DSP3_C) : %.c : %.inc
+
+$(DSP3INC) : %.inc : %.bin
+	@fgzip -9 -f $<
+	@rzip $<.gz MIPS/$*.rz
+	@binobj DSPcode MIPS/$*.rz $@
+
+MIPS/dsp3ac3.bin: dsp3rom.d16.ac3.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3dts.bin: dsp3rom.d16.dts.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3mp3.bin: dsp3rom.d16.mp3.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3cd.bin: dsp3rom.d16.cd.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3lpcm.bin: dsp3rom.d16.lpcm.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3jpg.bin: dsp3rom.d16.jp
+	makeim -b $< $@
+
+MIPS/dsp3nes.bin: dsp3rom.d16.nes
+	makeim -b $< $@
+
+MIPS/dsp3spdif.bin: dsp3rom.d16.spdif.right.32bck
+	makeim -b $< $@
+
+MIPS/dsp3dtscd.bin: dsp3rom.d16.dtscd.right.32bck
+	makeim -b $< $@
+
+
+MIPS/font_offset.d : osdfont.inc
+MIPS/font_offset.o : font_offset.c font.c osdfont.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/osdfont_decompress.d : osdfont.inc
+MIPS/osdfont_decompress.o : osdfont_decompress.c font.c font_offset.c osdfont.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+osdfont.inc: osdfont.bin
+	@fgzip -9 -f $<
+	@rzip $<.gz MIPS/$*.rz
+	@binobj OSDfontbin MIPS/$*.rz osdfont.inc
+
+
+osdfont.bin: user_init.h font_ori.c font_traditional.c font_konka.c
+	font_parse
+
+dsp3pm.c: dsp3pm.d16
+	makepm $< $@
+
+MIPS/dsp3ac3.d : dsp3ac3.inc
+MIPS/dsp3dts.d : dsp3dts.inc
+MIPS/dsp3mp3.d : dsp3mp3.inc
+MIPS/dsp3cd.d : dsp3cd.inc
+MIPS/dsp3lpcm.d : dsp3lpcm.inc
+MIPS/dsp3jpg.d : dsp3jpg.inc
+MIPS/dsp3nes.d : dsp3nes.inc
+MIPS/dsp3spdif.d : dsp3spdif.inc
+
+MIPS/dsp3ac3.o : dsp3ac3.c dsp3ac3.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3dts.o : dsp3dts.c dsp3dts.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3mp3.o : dsp3mp3.c dsp3mp3.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3cd.o : dsp3cd.c dsp3cd.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3lpcm.o : dsp3lpcm.c dsp3lpcm.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3jpg.o : dsp3jpg.c dsp3jpg.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+
+MIPS/dsp3nes.o : dsp3nes.c dsp3nes.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3spdif.o : dsp3spdif.c dsp3spdif.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+MIPS/dsp3dtscd.o : dsp3dtscd.c dsp3dtscd.inc
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -O0 -g0 -c -o $@ $<
+
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),tar)
+ifneq ($(MAKECMDGOALS),bak)
+sinclude	$(DEPENDS)
+endif
+endif
+endif
+
+

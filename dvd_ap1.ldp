@@ -1,0 +1,151 @@
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+    .drv_ap1 :
+    {
+       _text_drv_ap = .;
+#ifndef UNLOAD_ROMCODE
+        *rwdk.o         (.text*)
+        *flash.o        (.text*)    // 2005/12/28 yltseng, move from .drv_cdrom
+        *flash.o        (.rodata*)
+        *flash_parallel.o   (.text*)
+        *flash_parallel.o   (.rodata*)
+        *flash_spi.o    (.text*)
+        *flash_spi.o    (.rodata*)
+    #ifdef LOAD_AP
+
+       *ircmd.o        (.rodata*)
+       *ircmd.o        (.text*)
+       *ir_parser.o    (.rodata*)
+       *ir_parser.o    (.text*)
+       *ir_drv.o       (.text*)
+       *disp.o         (.rodata*)
+       *disp.o         (.text*)
+       *polling.o      (.text*)
+       *sound_if.o     (.text*)
+       
+        #ifndef SUPPORT_MP4_SUBTITLE       
+       *audif.o        (.text*)
+       *audif.o        (.rodata*)
+       
+       #ifndef SUPPORT_8202_DVB  //David 2005-7-15 18:11
+       // auddrv lib    2005/04/28 yltseng
+       *auddac.o       (.text*)
+       *auddac.o       (.rodata*)
+       *dspkernel.o    (.text*)
+       *dspkernel.o    (.rodata*)
+       *dspcodecinfo.o (.text*)
+       *dspcodecinfo.o (.rodata*)
+       *audkernel.o    (.text*)
+       *audkernel.o    (.rodata*)
+       *auddrv.o       (.text*)
+       *auddrv.o       (.rodata*)
+       #endif
+        #endif
+       
+        #if !defined(SUPPORT_MIDI)&&!defined(SUPPORT_8202_DVB) //David 2005-7-15 16:15
+       // osd lib       2005/04/28 yltseng
+       *osd1.o               (.text*)
+       *osd3.o               (.text*)
+       *osdv2.o              (.text*)
+       *osd_midi.o           (.text*)
+       *osd_BmpUI.o          (.text*)
+       
+       *osd_AppRegionInit.o  (.text*)
+       *osd_WndProc.o        (.text*)
+       *osd_ShowWarningBox.o (.text*)
+       *osd_AppDraw.o        (.text*)
+       
+       *osd_customers.o      (.text*)
+       *osd_draw.o           (.text*)
+       *osd_hw.o             (.text*)
+        #endif
+
+        #if !defined( ENLARGE_SDRAM_CS_AND_OSD_SIZE )
+
+       *vfd.o          (.rodata*)
+       *vfd.o          (.text*)
+
+            #if !defined(NINTAUS_DVD)||defined(NIN_612_4M) 
+       *setup.o        (.rodata*)
+            #endif//#if !defined(NINTAUS_DVD)
+        
+            #if defined(SUPPORT_MP4)||defined(SUPPORT_ID3)||defined(SUPPORT_OSDID3) //linrc 2004-11-08 10:57
+       *fs_message_show.o   (.rodata*)
+       *fs_message_show.o   (.text*)
+            #endif
+
+            #if !defined(BBK_DVD)&&!defined(NINTAUS_DVD)||defined(NIN_612_4M)  //terry,2003/12/17 06:18PM      
+       *safe.o         (.rodata*)
+       *safe.o         (.text*)
+       *prog.o         (.rodata*)       
+            #endif
+            
+        #endif
+
+    #endif
+    
+    #ifdef LOAD_SERVO
+       *Servo.o        (.text*)
+       *Servo.o        (.rodata*)
+       *DecUtil.o      (.text*)
+       *DecUtil.o      (.rodata*)
+       *DecSubEcc.o    (.text*)
+       *DecSubEcc.o    (.rodata*)
+       *IdeMain.o      (.text*)
+       *IdeMain.o      (.rodata*)
+       *DecInit.o      (.text*)
+       *DecISR.o       (.text*)
+       *DecISR.o       (.rodata*)
+       *Atapicmd.o     (.text*)
+       *Atapicmd.o     (.rodata*)
+       *DecUpdt.o      (.text*)
+       *DecUpdt.o      (.rodata*)
+       *DSPCode.o      (.text*)
+       *SUtil.o        (.text*)
+       *Servoset.o     (.text*)
+       *TimerISR.o     (.text*)
+       *DecExUtil.o    (.text*)
+       *DecExUtil.o    (.rodata*)
+       *ServoSet.o     (.text*)
+       *ServoSet.o     (.rodata*)
+       *SrvCom.o       (.text*)
+    #endif
+
+    #ifdef LOAD_AP_OTHER //terry,2004/4/13 09:36PM
+       *avd.o          (.text*)
+       *timer.o        (.text*)
+       *ircode.o       (.rodata*)
+       *osdutil.o      (.rodata*)
+       *font_offset.o  (.rodata*)
+       *sound.o        (.rodata*)
+       *sysmain2.o     (.rodata*)       
+       *estd.o         (.text*) 
+       *supset.o       (.text*) 
+       *cvdogt.o       (.text*) 
+       *sup.o          (.text*) 
+     
+       *memcfg.o       (.text*) 
+       *util.o         (.text*) 
+       *nav_util.o     (.text*)
+       *read.o         (.text*)
+       *score.o        (.text*)
+       *kernel.o       (.text*)
+       *ninf.o         (.text*)
+       *_Xdivdi3.o     (.text*)
+       *setvideo.o     (.text*)
+//       *hwif.o         (.text*)//cause 8200 standby fail.2004-4-30 11:32
+
+       *cd.o       (.text*)
+
+    #endif
+       
+#endif
+
+       .        = ALIGN(16);
+    } > sdram_ap1
+}
+
+

@@ -1,0 +1,69 @@
+/*
+                     e2prom_map.h
+   This file allocate all space of 24c02.
+
+rom check sum
+setup menu
+receiver status
+tuner
+amplifier
+divx drm 
+                     huziqin 2005-5-10
+*/
+#include "setup_def.h"
+
+#ifndef _E2PROM_MAP_H
+#define _E2PROM_MAP_H
+
+#define E2PROM_MAP_SETUP_START 4
+//#define E2PROM_MAP_SETUP_SIZE  61   /*SEE setup_sel[][] AND t_USER_SET FOR MORE*/
+
+#define E2PROM_MAP_SETUP_SIZE  ((MAX_SETUP_PAGE + MAX_CUSTM_SETUP_PAGE)*(MAX_PAGE_ITEM+1)+32)
+
+#define E2PROM_MAP_SETUP_END  (E2PROM_MAP_SETUP_START+E2PROM_MAP_SETUP_SIZE)
+
+
+#define RECEIVER_MODE_MEMORY_ADDR (E2PROM_MAP_SETUP_END+1)
+
+#define SURROUND_MODE_ADDR (RECEIVER_MODE_MEMORY_ADDR+1)
+#define PROLOGIC_MODE_ADDR (SURROUND_MODE_ADDR+1)
+#define INIT_FLAG_ADDR     (PROLOGIC_MODE_ADDR+1)
+
+#define AFTER_DEFAULT_RESET_FLAG (INIT_FLAG_ADDR+1)
+#ifdef AFTER_DEFAULT_RESET_AMP_VOLUME
+#define AFTER_DEFAULT_RESET_VOL_FLAG (AFTER_DEFAULT_RESET_FLAG + 1)
+#endif
+#define SETUP_MENU_BASE   E2PROM_MAP_SETUP_START 
+#define TVG_MEM_BASE    AFTER_DEFAULT_RESET_FLAG+1 
+#define DVD_INFO_BASE   TVG_MEM_BASE +2 
+#define CDROM_INFO_BASE DVD_INFO_BASE+52 //162//180
+#define CDDA_INFO_BASE  CDROM_INFO_BASE+20 //182//200
+#define VCD_INFO_BASE   CDDA_INFO_BASE+5 //187//220
+
+#define DVD_DISC_INFO  VCD_INFO_BASE+5 //192//244
+#define CDDA_DISC_INFO DVD_DISC_INFO+4 //196//248
+#define VCD_DISC_INFO  CDDA_DISC_INFO+4 // 200//252
+//#define DRM_INFO              208
+
+
+#define E2PROM_FREE_START VCD_DISC_INFO+4
+
+#define DIVX_DRM_START  208
+#define DRM_INFO DIVX_DRM_START
+#if (E2PROM_FREE_START >= DIVX_DRM_START)
+#error e2prom overlap!!!!pls check "e2prom_map.h"
+#endif
+
+#define  AMPLIFIER_START  256
+
+#define BASS_GAIN_ADDR	AMPLIFIER_START+7
+#define TREBLE_GAIN_ADDR BASS_GAIN_ADDR+1
+
+
+#define TUNER_START TREBLE_GAIN_ADDR
+#define TUNER_SIZE  (100)  /*SEE RADIO_MV114_KST.H FOR MORE*/
+#define TUNER_END   (TUNER_START + TUNER_SIZE)
+
+
+#endif//#ifndef _E2PROM_MAP_H
+

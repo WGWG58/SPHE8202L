@@ -1,0 +1,953 @@
+/*****************************************************\
+Creater: Terry
+Date   : 2001/5/14 05:30PM
+Description: Program menu using
+\*****************************************************/
+#ifdef SUPPORT_MP4_SUBTITLE
+#include "fsNAV.h"
+extern int IS_EXT_SUP_ACTIVATED(void);
+#endif
+
+//#define MONE_PROG
+extern UINT16 mp3_file_count(void);
+void FSGUI_cal_dir_file(UINT16 *dir,UINT16 *file,UINT16 iSelect);
+void FSGUI_cal_2_file(UINT16 *iSelect,UINT16 dir,UINT16 file);
+
+#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.10
+BYTE tt_input_num_count = 0;
+
+/*Function Purpose:  Do checking for input TT in DVD Program.
+  for a reasonal operation: 
+  (1)when TT>=10, 
+            a:input 2 should auto right shift HL cursor, 
+            b:input 02 or 10 should auto right shift HL cursor, too,
+            c: input 1 should not
+  (2)when TT<10,
+            a number > 0, should auto right shift HL cursor, otherwise not
+  
+  Note:    TT value = prog[y][0]
+  
+  RETURN:  1. do right shift
+           0. not do             	
+*/
+BYTE check_cursor_shift_right(void)
+{	
+	UINT8 x, y;	
+	
+	x=index_x%2;
+	y=index_y+MAX_NM_Y*(index_x/2)-1;
+			
+	if( (pDSV->dTT_SRP_Ns <10) && (prog[y][0] > 0) )
+	{
+		tt_input_num_count = 0;		
+		return 1;
+	}	
+	else	//TT number > 10
+	{
+		tt_input_num_count++;
+		if(tt_input_num_count == 1)
+		{
+			if( (prog[y][0] < 10)&& (prog[y][0] > (pDSV->dTT_SRP_Ns/10)) )//for (1)a
+			{
+				tt_input_num_count = 0;
+				return 1;
+			}
+			else 								 //for (1)c		
+				return 0;			
+		}
+		else						             //for (1)b								
+		{			
+			tt_input_num_count = 0;
+			if(prog[y][0] >0)
+				return 1;	
+			else
+				return 0;
+		}		
+	}	
+}
+
+void clear_tt_input_num_count(void)
+{
+	tt_input_num_count = 0;
+}	
+#endif
+
+#ifdef SUPPORT_OSDID3//suqiaoli add 2004-3-26 
+extern void osd_init_OSDID3(void);
+extern void show_id3(void);
+#endif
+
+#ifdef SUPPORT_MP4_SUBTITLE  // David 2004-5-12
+extern void osd_init_OSDSRT(void);
+#endif
+
+#ifdef SETUP_PROGRAM_IN_PLACE_UNDER_16M
+
+#ifdef NEW_STYLE_SETUP
+
+static inline void ProgOffForNewStyleSetup()
+{   // 2004/11/26 yltseng
+    #ifdef SDRAM_16Mb_Mode
+    
+    #include "memmap0.h"
+	#include "navdata.h"
+	
+	regs0->osd_base_addr=GetOSDBackUpAddress();
+	osd_init();
+
+	if( (prog_state == 2)||(prog_state == 6))
+	{
+		if ((cd_type_loaded == CDROM) && (pFsJpeg->gifsFuncBtn == 2))
+		{		
+			prog_state=255;
+			ircmd_post_func(CMD_FUNC | CMD_FUNC_PLAY);          
+		} 
+		else 
+		{
+			if ((prog_state != 6)&& (prog_state != 3))
+		        ircmd_resume();	
+			prog_state=0;
+		}    	    
+
+        OSD1000ISP_STATUS(OSDISP_PROG_CNL, OSDIR_PROGRAM);
+
+		psprintf(RegionValStr[REGION1], "");
+		PrintOsdMsg(STR_OS_SPACE, REGION1, 1, 1);                  
+	}
+	
+    #else
+    
+	if( (old_play_state==VCD_STATE_NORMAL)&&(play_state==VCD_STATE_PAUSE) ) // add by shawn 20020218
+		ircmd_play();
+        #ifdef MP3_STOP_IN_GUI_START//zhaoyanhua add 03-10-14 11:39 keep inital state for MP3
+	else if((Is_MP3_STATE()) && (old_play_state == VCD_STATE_MP3_FILELIST))
+	{
+		play_state = old_play_state;
+	}
+        #endif
+        
+    #endif
+}
+
+#else
+
+static inline void ProgOffForNormal()
+{   // 2004/11/26 yltseng
+    #ifdef SDRAM_16Mb_Mode
+
+    osd_disable();
+    
+    extern UINT8   g_uiOSDStatus;       // 2005/01/14 yltseng
+    g_uiOSDStatus = OSD_FULL_SCREEN_STATUS_NONE;
+    regs0->osd_base_addr=GetOSDBackUpAddress();
+        
+        #ifdef JPEG_PAUSE_WHEN_SETUP    // 2004/12/30 yltseng
+    if( Is_JPEG_SlideMode() )
+    {
+        play_state = VCD_STATE_NORMAL;
+        PrintOsdMsg( STR_OS_SEQUENCE, REGION1, 1, 0 );
+    }
+        #endif
+    #endif
+    
+	if( (old_play_state==VCD_STATE_NORMAL)&&(play_state==VCD_STATE_PAUSE) ) // add by shawn 20020218
+		ircmd_play();
+    #ifdef MP3_STOP_IN_GUI_START//zhaoyanhua add 03-10-14 11:39 keep inital state for MP3
+	else if((Is_MP3_STATE()) && (old_play_state == VCD_STATE_MP3_FILELIST))
+	{
+		play_state = old_play_state;
+	}
+    #endif
+}
+
+#endif
+
+void prog_func_off()
+{
+	#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+	#endif
+
+    if(prog_cnt==0) //uncomplete program no
+    {
+      ircmd_cancel(1);//terry 1011
+    }    
+
+#ifdef CD_PLAYER        //liweihua add 2003-9-11
+    if(cd_type_loaded == CDDA)
+        osd_init_cdplayer();
+    else
+        osd_init();
+#else		
+    osd_init();
+#endif
+
+    full_scrn = 0;      
+// 2004/11/26 yltseng
+#ifdef NEW_STYLE_SETUP //zhaoyanhua add 2003-8-26 19:03
+    ProgOffForNewStyleSetup();
+#else
+    ProgOffForNormal();
+#endif
+
+//initializing infomation displaying OSD
+#ifdef SUPPORT_MP4_SUBTITLE
+    if(IS_EXT_SUP_ACTIVATED())
+        osd_init_OSDSRT();
+    else
+#endif
+{
+#ifdef SUPPORT_OSDID3
+    if(Is_MP3_STATE())
+    {
+        osd_init_OSDID3();
+        show_id3();
+    }
+#endif 
+}
+}
+
+#else   // SETUP_PROGRAM_IN_PLACE_UNDER_16M
+
+void prog_func_off()
+{
+	#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+	#endif
+
+#ifdef CD_PLAYER        //liweihua add 2003-9-11
+    if(cd_type_loaded == CDDA)
+        osd_init_cdplayer();
+    else
+        osd_init();
+#else		
+			osd_init();
+#endif
+
+    if(prog_cnt==0) //uncomplete program no
+    {
+      ircmd_cancel(1);//terry 1011
+    }    
+    
+    full_scrn = 0;        
+#ifdef SDRAM_16Mb_Mode  
+	{
+	    #include "memmap0.h"
+		#include "navdata.h"
+		
+		regs0->osd_base_addr=GetOSDBackUpAddress();
+		osd_init();
+		
+		#ifdef NEW_STYLE_SETUP //zhaoyanhua add 2003-8-26 19:03
+		if( (prog_state == 2)||(prog_state == 6))
+		#else
+		if (prog_state==2)
+		#endif
+		{
+			if ((cd_type_loaded == CDROM) && (pFsJpeg->gifsFuncBtn == 2))
+			{		
+				prog_state=255;
+				ircmd_post_func(CMD_FUNC | CMD_FUNC_PLAY);          
+			} else {
+				#ifdef NEW_STYLE_SETUP//zhaoyanhua add 2003-8-26 19:02
+				if ((prog_state != 6)&& (prog_state != 3))
+				ircmd_resume();	
+				prog_state=0;
+				#else
+				prog_state=0;
+				ircmd_resume();	
+				#endif
+			}    	    
+			psprintf(RegionValStr[REGION1], "");
+			PrintOsdMsg(STR_OS_SPACE, REGION1, 1, 1);                  
+		}
+	}
+#else
+	{
+		if( (old_play_state==VCD_STATE_NORMAL)&&(play_state==VCD_STATE_PAUSE) ) // add by shawn 20020218
+			ircmd_play();
+	#ifdef MP3_STOP_IN_GUI_START//zhaoyanhua add 03-10-14 11:39 keep inital state for MP3
+		else if((Is_MP3_STATE()) && (old_play_state == VCD_STATE_MP3_FILELIST))
+		{
+			play_state = old_play_state;
+		}
+	#endif
+	}
+#endif
+
+#if defined(SUPPORT_MP4_SUBTITLE) 
+
+    if(IS_EXT_SUP_ACTIVATED())
+        osd_init_OSDSRT();
+    else
+#endif
+{
+#if defined(SUPPORT_OSDID3)
+        if(Is_MP3_STATE() && (play_state != VCD_STATE_STOP))
+        {
+            osd_init_OSDID3();
+            show_id3();
+        }
+#endif
+}    
+}
+
+#endif  // SETUP_PROGRAM_IN_PLACE_UNDER_16M
+
+void prog_func_clear(void)
+{
+	UINT8 i;
+	for(i=0;i<=SHOW_PROG_NO;i++)
+	{
+		prog[i][0]=0;
+		prog[i][1]=0;
+	}
+	index_y=2;
+	index_x=0;
+	
+	prog_cnt = 0;
+}
+
+
+
+int is_clear_pos(void)//2002-4-19 1:53
+{
+	int ret=0;
+	if(prog_item[page][index_y][0]==SET_FUNC)
+	{
+#ifndef PROG_12_ITEMS //Jeff 20020925
+		if(prog_item[page][index_y][index_x/2+1]==STR_OS_CLEAR)
+#else
+		if(prog_item[page][index_y][index_x/2+2]==STR_OS_CLEAR)
+#endif
+		{
+			ret=1;
+		}
+	}
+	return ret;	
+}	
+
+void prog_func_select(void)
+{
+	#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+	#endif
+	
+	if(prog_item[page][index_y][0] == SET_FUNC)
+	{
+#ifdef PROG_12_ITEMS
+		if (prog_item[page][index_y][index_x / 2 + 2] == STR_OS_CLEAR)
+		{
+			prog_func_clear();
+			ShowProgPage();
+		}
+		else if (prog_item[page][index_y][index_x / 2 + 2] == STR_OS_PLAY)
+			ircmd_play();
+#else
+		if (prog_item[page][index_y][index_x / 2 + 1] == STR_OS_CLEAR)
+		{
+			prog_func_clear();
+			ShowProgPage();
+		}
+		else if (prog_item[page][index_y][index_x / 2 + 1] == STR_OS_PLAY)
+			ircmd_play();
+#endif
+	}
+}
+
+
+void prog_func_play(void)
+{
+	UINT8 i;
+
+#ifdef MONE_PROG
+	printf("prog_func_play, in\n");
+#endif
+	
+	prog_cnt=0;
+	
+	for(i=0;i<=SHOW_PROG_NO;i++)
+	{
+		//if (offset == 3) { //Jeff 20010808
+		if (cd_type_loaded == CDROM) { //Jeff 20010914
+			
+			if  ((prog[i][0] >= 1) && (prog[i][0] <=mp3_file_count()))
+			{
+#ifdef MONE_PROG
+				printf("i:%d Page:%d Item:%d sucess\n", i, prog[i][0], prog[i][1]);
+#endif
+				prog_cnt++;
+				FSGUI_cal_dir_file(&prog[prog_cnt][0],&prog[prog_cnt][1],prog[i][0]);
+				printf("prog[prog_cnt][0]:%d prog[prog_cnt][1]:%d\n",prog[prog_cnt][0],prog[prog_cnt][1]);
+				//prog[prog_cnt][0]=prog[i][0];
+				//prog[prog_cnt][1]=prog[i][1];
+			}
+			else
+			{
+#ifdef MONE_PROG
+				printf("i:%d Page:%d Item:%d fail\n", i, prog[i][0], prog[i][1]);
+#endif
+			}
+			
+			if (i > prog_cnt)
+			{
+				prog[i][0]=0;
+				prog[i][1]=0;
+			}
+		}
+		else //if (cd_type_loaded == CDROM)
+		if(offset==2)
+		{
+			//printf("i:%x prog[i][0]:%x\n",i,prog[i][0]);
+
+//			if( (prog[i][0]>=cd_trk_lo)&&(prog[i][0]<=show_trk_num(cd_trk_hi)) )
+			if ((prog[i][0] >= 1) && (prog[i][0] <= show_trk_num(cd_trk_hi))) // robert 030512 for some case cd_trk_lo = 2
+			{
+				prog_cnt++;
+				prog[prog_cnt][0]=prog[i][0];
+				//printf("prog_cnt:%x\n",prog_cnt);
+			}
+			
+			if(i>prog_cnt)
+				prog[i][0]=0;
+		}
+		else //if(offset==2)
+		{//dvd ,reference ChkPTTRange
+			UINT8 tt=prog[i][0];
+			UINT16 ptt=prog[i][1];
+			
+#ifdef DVD_AUDIO
+			UINT8  (*ChkRange)(UINT8*, UINT16*);
+
+			if (dAMG_LSN)				// alan, 2002/11/8 11:40上午
+				ChkRange=ChkTrkRange;
+			else
+				ChkRange=ChkPTTRange;			
+			if( tt && ptt && ChkRange(&tt,&ptt))
+#else
+			if( tt && ptt && ChkPTTRange(&tt,&ptt))
+#endif					
+			{
+#ifdef MONE_PROG
+				printf("i:%d tt:%d ptt:%d sucess\n",i,prog[i][0],prog[i][1]);
+#endif
+				
+				prog_cnt++;
+				prog[prog_cnt][0]=prog[i][0];
+				prog[prog_cnt][1]=prog[i][1];
+			} else
+			{
+#ifdef MONE_PROG
+				printf("i:%d tt:%d ptt:%d fail\n",i,prog[i][0],prog[i][1]);
+#endif
+			}
+			
+			if(i>prog_cnt)
+			{
+				prog[i][0]=0;
+				prog[i][1]=0;
+			}
+		}
+	} //for(i=0;i<SHOW_PROG_NO;i++)
+	
+	if (prog_cnt)
+	{
+		PrintOsdMsg(STR_OS_PROGPLAY,REGION1,3,0);//nono 2-7-9 22:05
+	}
+#ifdef MONE_PROG
+	printf("prog_func_play, out\n");
+#endif
+//to avoid the bug when program play not show display.
+//zhaoyanhua add 2003-11-13 16:34
+#ifdef SDRAM_16Mb_Mode
+		if (old_t_disp)
+		{
+			t_disp=old_t_disp;
+			DispPolling(3);
+		}
+#endif
+	
+#ifdef SUPPORT_WMA        //nono 4-9-3 20:36    
+    asf_resume_pck = 0;
+#endif
+	
+#ifndef SDRAM_16Mb_Mode//nono 2004-7-28 18:02
+	resumeMSF = 0; //Jeff 20020715
+#endif
+}
+
+
+
+void prog_func_input(UINT8 num)
+{
+	UINT8 x,y;
+	int val;
+	
+	x=index_x%2;
+	y=index_y+MAX_NM_Y*(index_x/2)-1;
+	
+	if(num!=11)
+	{//clear
+		val=prog[y][x];
+		add_input_num(&val);
+		
+		printf("val:%d prog[y][x]:%d\n",val,prog[y][x]);
+/* alan 0429 modified */
+		/* if the prog doesn't locate in valid range, prog=0 to invalid it */
+		switch (cd_type_loaded)
+		{
+		case CDDA:
+		case CDVCD10:
+		case CDVCD20:
+		case CDSVCD:
+		    prog[y][x]=val%100;
+			if (prog[y][x]>cd_total_trk()) prog[y][x]=0;
+			break;
+		case CDROM:
+		    prog[y][x]=val%10000;
+            if(prog[y][x] > mp3_file_count()) prog[y][x]=0;
+            
+            printf("=>val:%d prog[y][x]:%d\n",val,prog[y][x]);
+			break;
+		case CDDVD:
+			{
+				UINT8 tt;
+				UINT16 ptt;
+				
+				prog[y][x]=val%100;
+				tt=prog[y][0];
+				ptt=prog[y][1];
+				
+#ifdef DVD_AUDIO
+				if (dAMG_LSN)	// alan, 2002/11/8 11:39上午
+				{
+					if (!ChkTrkRange(&tt,&ptt))
+						prog[y][x]=0;
+					#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.10					
+					else
+					{
+						if((index_x) % 2 == 0)
+						{							
+							if(check_cursor_shift_right())
+						{
+								prog_func_right();
+								return;
+							}						
+						}
+					}
+					#endif
+				} else
+#endif   				
+				{
+					if(!ChkPTTRange(&tt,&ptt))
+						prog[y][x]=0;
+					#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.10					
+					else
+					{
+						if((index_x) % 2 == 0)
+						{		
+							if(check_cursor_shift_right())
+							{
+								prog_func_right();
+								return;
+							}		
+					}
+					}
+					#endif
+				}
+			}
+			break;
+		}
+	}
+	else
+		prog[y][x]=0;
+
+	//psprintf(linebuf,"%d %d %d",x,y,prog[y][x]);
+	//ShowOsdMsg(linebuf,2);
+	ShowProgSel(SW_REGION_ANTI);
+}
+
+
+void ShowProgSel(UINT8 mode)
+{
+  UINT8 sub_r, y, prog_r_max;
+  UINT16 tt, ch;//4-2-2 16:46
+  int str_id = 0;
+
+#ifdef PROG_12_ITEMS
+  if ((index_y >= 2) && (index_y <= 6))
+    sub_r = index_x / 2 + 2; // skip first column
+  else
+    sub_r = index_x / 2 + 1;
+#else // 16 items
+  sub_r = index_x / 2 + 1;
+#endif
+
+  id = prog_item[page][index_y][sub_r];
+  y = index_y + MAX_NM_Y * (index_x / 2) - 1;
+
+  //start of show prog_dir_picture  by chichang 2001/5/18
+  if(cd_type_loaded == CDDVD)
+#ifdef PROG_12_ITEMS
+	prog_r_max = 5;
+else
+	prog_r_max = 4;
+#else // 16 items
+    prog_r_max = 7;
+  else
+	prog_r_max = 6;
+#endif
+/*caoh mark 2005-6-16 14:23
+  if (mode)
+  {
+	if (prog_item[page][index_y][0] == SET_NM)
+	{
+		if(index_y == 2)
+		{
+			if(index_x == 0)
+				str_id = STR_OS_DIR7;
+			else if(index_x == prog_r_max)
+				str_id = STR_OS_DIR8;
+			else
+				str_id = STR_OS_DIR11;
+		}
+		else
+		{
+			if (index_x == 0)
+				str_id = STR_OS_DIR4;
+			else if(index_x == prog_r_max)
+				str_id = STR_OS_DIR3;
+			else
+				str_id = STR_OS_DIR10;
+		}
+	}
+	
+	if(prog_item[page][index_y][0] == SET_FUNC)
+	{
+		if (id == STR_OS_CLEAR)
+			str_id = STR_OS_DIR0;
+		else
+			str_id = STR_OS_DIR9;
+	}
+	
+	if(str_id)
+	{
+		PrintOsdMsg(str_id, (MAX_PROG_ITEM - 2 + 1) | SW_REGION4, 0, 0);
+		draw_osd_board((MAX_PROG_ITEM - 2 + 1),BOARD_LR_LINE|BOARD_DOWN_LINE);
+	}
+  }*/
+
+  if(prog_item[page][index_y][0] == SET_NM)
+  {//terry,2004/1/26 01:10PM
+  	UINT8 str[10];
+  	
+	tt = prog[y][0];
+	ch = prog[y][1];
+	
+	if (y==9)
+		psprintf(RegionValStr[index_y + 1], " %d ", y);	// for column alignment
+	else
+		psprintf(RegionValStr[index_y + 1], "%d ", y);			
+
+        str[0]=0;	
+        mode = mode | 0x02;        
+	if (offset == 2)
+	{
+		//vcd
+        	if (tt)
+		{
+			id = STR_OS_SPACE;
+			psprintf(str, " %04d", tt);
+		}
+	}
+	else// if (tt || ch)
+	{
+		//dvd
+		if (tt || ch)
+		{
+			//dvd
+			id = STR_OS_SPACE;
+			if (!tt)
+				psprintf(str, "--:%02d",ch);
+			else if (!ch)
+				psprintf(str, "%02d:--",tt);
+			else
+				psprintf(str, "%02d:%02d",tt, ch);			
+	       }
+	}
+	strcat1(RegionValStr[index_y + 1],str);
+  }
+
+  if (id)
+  {//terry,2004/1/26 01:10PM
+	str_id = id;
+	if(prog_item[page][index_y][0] == SET_FUNC)
+	{
+		psprintf(RegionValStr[index_y + 1], "%s ", &_OsdMessegeFont1[osd_font_mode][id][0]);
+		str_id = STR_OS_SPACE;
+		mode = mode | 1;
+	}
+	else if(mode & 0xf0)
+	{
+		if(page < 1)
+			mode = mode + (0x10 << (index_x % 2));
+	}
+	//board_type=BOARD_LR_LINE;
+	if((index_y==1)&&(index_x==3))	//wangshf for tonic to set "TT" "CC"  2/6/2004 4:16PM
+                {
+		psprintf(RegionValStr[index_y + 1], "%s", "    ");		
+		mode = mode | 1;
+		}	
+	
+	PrintOsdMsg(str_id, (index_y + 1) | (sub_r << 4), 0, mode);
+  }
+  
+  draw_osd_board(index_y+1,BOARD_LR_LINE);
+}
+
+
+
+void ShowProgPage(void)
+{
+    UINT8 x,y;
+
+	#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+	#endif
+    if (full_scrn&PROGRAM) 
+	{
+		//test
+		//board_type=BOARD_FULL_LINE;
+		//SetOsdCol(1,1,0,0xb3ff8880);//region 1~1,color index:0, gbr	color : 
+		#ifdef ALCO_MODIFY_PAL_OSD
+		//SetOsdCol(7,7,0,0xc0ffc0e0);//region 7~7,color index:0, gbr	color :	amethyst//nono 3-6-9 16:43
+		SetOsdCol(1,7,0,0x000000b0);
+		//SetOsdCol(2,7,1,0x806+8080ff);//region 2~7,color index:0, gbr	color :	Gray
+		//SetOsdCol(1,7,1,0x000000b0);//region 1~7,color index:1, gbr	color : black						
+		SetOsdCol(3,7,2,0x8346cfff);//region 3~7,color index:2, gbr	color : 橘色								
+		SetOsdCol(1,7,3,0xf3f3f3ff);//region 1~7,color index:3, gbr	color : blue
+		#else
+		SetOsdCol(7,7,0,0xc0ffc0e0);//region 7~7,color index:0, gbr	color :	amethyst//nono 3-6-9 16:43
+		SetOsdCol(1,6,0,0xb3ff88e0);//region 2~7,color index:0, gbr	color :	light blue//nono 3-6-9 16:43
+		//SetOsdCol(2,7,1,0x808080ff);//region 2~7,color index:0, gbr	color :	Gray
+		SetOsdCol(1,7,1,0x000000ff);//region 1~7,color index:1, gbr	color : black						
+		SetOsdCol(3,7,2,0x8346cfff);//region 3~7,color index:2, gbr	color : 橘色								
+		SetOsdCol(1,7,3,0xf3f3f3ff);//region 1~7,color index:3, gbr	color : blue
+		#endif
+		
+        InitSW_region();
+        x=index_x;
+        y=index_y;
+		
+		
+	    if(cd_type_loaded==CDDVD)
+	    {
+	       offset=1;
+	       page=0;
+	    }else 
+	    {	    	
+	       offset=2;
+	       page=1;
+	    }
+		
+		
+		if(cd_type_loaded==CDROM)//3-7-16 10:48
+		{
+		for(index_y=0;index_y<SHOW_PROG_NO;index_y++)
+		FSGUI_cal_2_file(&prog[index_y][0],prog[index_y][0],prog[index_y][1]);
+		}
+		
+	    for(index_y=0;index_y<MAX_REGION;index_y++) 
+	    {
+	      if(prog_item[page][index_y][0]) 
+	      {
+	        for(index_x=1;index_x<MAX_PROG_SEL;index_x+=offset) 
+	        {
+	            ShowProgSel(0);
+	        }
+	      }
+	    }
+/*		
+	    if(offset==2) 
+	    {
+	      //psprintf(RegionValStr[0],"[%d-%d]",show_trk_num(cd_trk_lo_now),show_trk_num(cd_trk_hi));
+	      //PrintOsdMsg(STR_OS_SPACE,0x04<<4,0,1);
+	      //board_type=BOARD_FULL_LINE;
+	      psprintf(RegionValStr[1],"[%d-%d]",show_trk_num(cd_trk_lo_now),show_trk_num(cd_trk_hi));	    
+	      PrintOsdMsg(STR_OS_SPACE, (0x04<<4)|1,0,1);
+	    }*/
+		
+	    index_x=x;
+	    index_y=y;
+	    ShowProgSel(SW_REGION_ANTI);
+	    //board_type=0;
+	    #ifndef ALCO_MODIFY_PAL_OSD
+	    draw_osd_board(1,BOARD_FULL_LINE);
+	    draw_osd_board(2,BOARD_UP_LINE);
+	    #endif
+	    
+	} //if (full_scrn&PROGRAM)
+
+}
+
+
+
+void prog_func_down(void)
+{
+UINT8 y=index_y;
+ShowProgSel(0);
+#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+clear_tt_input_num_count();
+#endif
+
+for(index_y++;index_y<MAX_PROG_ITEM;index_y++) {
+if(prog_item[page][index_y][0]!=SET_NE) {
+    if(prog_item[page][index_y][0]!=SET_NM) {
+#ifdef PROG_12_ITEMS
+        if(prog_item[page][index_y][index_x/2+2]==0) {
+#else
+				if(prog_item[page][index_y][index_x/2+1]==0) {
+#endif
+					if(index_x<MIN_FUNC_X) {
+						//index_x=MIN_FUNC_X;//kenny mark it
+						
+						if(offset==2)
+							index_x+=offset;
+						else
+							index_x+=prog_item[page][index_y][0];
+						
+						//printf("1.**x=%d y=%d page:%d \n",index_x,index_y,page);
+						
+					} else //if(index_x<MIN_FUNC_X)
+						if (index_x>MAX_FUNC_X) {
+							index_x=MAX_FUNC_X;
+						}
+				} //if(prog_item[page][index_y][index_x/2+1]==0)
+				
+			} //if(prog_item[page][index_y][0]!=SET_NM)
+			
+			break;
+		} //if(prog_item[page][index_y][0]!=SET_NE)
+		
+	} //for(index_y++;index_y<MAX_PROG_ITEM;index_y++)
+	
+	if(index_y==MAX_PROG_ITEM) {
+		index_y=y;
+	}
+	
+	ShowProgSel(SW_REGION_ANTI);
+	
+#ifdef 	MONE_PROG
+	printf("prog_func_down:x=%d y=%d page:%d \n",index_x,index_y,page);
+#endif
+}
+
+
+void prog_func_up(void)
+{
+#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+#endif
+	if(index_y>2) {
+		ShowProgSel(0);
+		
+		for(index_y--;index_y>0;index_y--) {
+			if(prog_item[page][index_y][0]!=SET_NE)
+				break;
+		}
+		
+		ShowProgSel(SW_REGION_ANTI);
+	}
+	
+	
+#ifdef 	MONE_PROG
+	printf("prog_func_up:x=%d y=%d page:%d \n",index_x,index_y,page);
+#endif
+}
+
+
+
+void prog_func_left(void)
+{
+#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+#endif
+	ShowProgSel(0);
+	if( ((index_x>0)&&(prog_item[page][index_y][0]==SET_NM))||
+    ((index_x>MIN_FUNC_X)&&(prog_item[page][index_y][0]==SET_FUNC)) )
+	{
+		for(;index_x>0;) {
+			if(offset==2) {
+				index_x-=offset;
+			} else {
+				index_x-=prog_item[page][index_y][0];
+			}
+			
+			if(prog_item[page][index_y][index_x/2+1]!=SET_NE)
+				break;
+		}
+	}
+	
+	ShowProgSel(SW_REGION_ANTI);
+	
+#ifdef 	MONE_PROG
+	printf("prog_func_left:x=%d y=%d page:%d \n",index_x,index_y,page);
+#endif
+}
+
+
+
+void prog_func_right(void)
+{
+#ifdef DVD_PROG_AUTO_CURSOR_RIGHT	//Maoyong 2004.02.24
+	clear_tt_input_num_count();
+#endif
+
+#ifdef PROG_12_ITEMS
+	UINT8 max = MAX_PROG_SEL - offset - 2;
+#else
+	UINT8 max = MAX_PROG_SEL - offset;
+#endif
+	
+	if( ((index_x<max)&&(prog_item[page][index_y][0]==SET_NM))||
+    ((index_x<MAX_FUNC_X)&&(prog_item[page][index_y][0]==SET_FUNC)) )
+	{
+		ShowProgSel(0);
+		
+		for(;index_x<MAX_PROG_SEL;) {
+			if(offset==2) {
+				index_x+=offset;
+			} else {
+				index_x+=prog_item[page][index_y][0];
+			}
+			
+			if(prog_item[page][index_y][index_x/2+1]!=SET_NE)
+				break;
+		}
+		
+		ShowProgSel(SW_REGION_ANTI);
+	}
+	
+#ifdef 	MONE_PROG
+	printf("prog_func_right:x=%d y=%d page:%d \n",index_x,index_y,page);
+#endif
+}
+
+
+/* move to ircmd.c
+void prog_next(void)
+{
+	if (prog_cnt) {
+		prog_index = (prog_index>=prog_cnt) ?  1 :(prog_index+1);
+	}
+}
+
+
+void prog_prev(void)
+{
+	if (prog_cnt) {
+		prog_index = ((prog_index>1) ? prog_index-1:prog_cnt);
+	}
+}
+*/
+

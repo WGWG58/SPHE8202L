@@ -1,0 +1,190 @@
+#include "setup_password_gui.h"
+
+PASSWORDSGUI_TYPE passwordstate;
+static UINT32 oldpassword,newpassword,confirmpassword;
+
+void setup_GetPos_Password(UINT8 direction)
+{
+    switch(direction)
+    {
+		case SETUP_ENTER:
+			break;
+        
+		case SETUP_UP:
+            switch(passwordstate)
+            {
+                case PASSWORDS_ENTER:
+                    confirmpassword = 0xfffe;
+                    passwordstate=PASSWORDS_UNLOCK;
+                    ShowSetupPassword("");
+                    break;
+                default:
+                    break;
+            }
+			break;
+        
+		case SETUP_DOWN:
+            switch(passwordstate)
+            {
+                case PASSWORDS_ENTER:
+                    confirmpassword = 0xfffe;
+                    passwordstate=PASSWORDS_UNLOCK;
+                    ShowSetupPassword("");
+                    break;
+                default:
+                    break;
+            }
+			break;
+        
+		case SETUP_LEFT:
+			break;
+        
+		case SETUP_RIGHT:
+			break;
+        
+		case SETUP_SELECTION:
+			switch(passwordstate)
+			{
+				case PASSWORDS_OLD:
+				case PASSWORDS_NEW:
+				case PASSWORDS_CONFIRM:
+					reset_passwd_cnt();
+					setup_gui_state=SETUPGUI_MENU;
+                    setup_mLevel = SETUP_ML2;
+                    setup_pos[SETUP_ML0] = setup_mLevel;
+                    setup_pos[SETUP_ML3] = 0;
+					break;
+
+				case PASSWORDS_ENTER:
+					passwordstate=PASSWORDS_UNLOCK;
+					ShowSetupPassword("");
+					break;
+				
+				case PASSWORDS_NULL:
+					break;
+				
+				default:
+					passwordstate=PASSWORDS_NULL;
+					break;
+			}
+			break;
+        
+    }
+}
+
+void ShowSetupPassword(const char *buf)
+{
+	switch(passwordstate)
+		{
+		case PASSWORDS_INIT:
+			oldpassword=0;
+			newpassword=0xffff; //liumzh
+			confirmpassword=0xffff;
+			reset_passwd_cnt();
+			Draw_RoundBox(PASSWORDGUI_XSTART,PASSWORDGUI_YSTART+PASSWORDGUI_SCYLEN,PASSWORDGUI_XLEN,PASSWORDGUI_YLEN-PASSWORDGUI_SCYLEN, PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+			Draw_RoundBox(PASSWORDGUI_XSTART,PASSWORDGUI_YSTART,PASSWORDGUI_XLEN-PASSWORDGUI_SCXLEN,PASSWORDGUI_YLEN, PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawSlantCorner(PASSWORDGUI_SCXS,PASSWORDGUI_SCYS,PASSWORDGUI_SCXE,PASSWORDGUI_SCYE,0,0,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4,"SET PASSWORD",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,"CURRENT:",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,"NEW:",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,"CONFIRM:",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,"----",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,"PRESS ENTER TO RETURN.",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			Draw_Border(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR,PASSWORDGUI_FILLCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,"----",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+			osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,"----",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+			passwordstate=PASSWORDS_OLD;
+			break;
+		
+		case PASSWORDS_OLD:
+			if(digit_cnt<PASSWORD_LENGTH)
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,buf,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+			else
+				{
+				Draw_RoundBox(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT,"XXXX",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,"PRESS ENTER TO SET .  ",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+				oldpassword=tmp_passwd;
+				reset_passwd_cnt();
+				passwordstate=PASSWORDS_ENTER;
+				}
+			break;
+		
+		case PASSWORDS_NEW:
+			if(digit_cnt<PASSWORD_LENGTH)
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,buf,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+			else
+				{
+				Draw_Border(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR,PASSWORDGUI_FILLCOLOR);
+				Draw_RoundBox(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,"XXXX",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,"----",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+				newpassword=tmp_passwd;
+				reset_passwd_cnt();
+				passwordstate=PASSWORDS_CONFIRM;
+				}
+			break;
+		
+		case PASSWORDS_CONFIRM:
+			if(digit_cnt<PASSWORD_LENGTH)
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,buf,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+			else
+				{
+				Draw_Border(PASSWORDGUI_XSTART+2,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,12+22*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR,PASSWORDGUI_FILLCOLOR);
+				Draw_RoundBox(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*3,"XXXX",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+				osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,"PRESS ENTER TO SET.",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_FILLCOLOR);
+				confirmpassword=tmp_passwd;
+				reset_passwd_cnt();
+				passwordstate=PASSWORDS_ENTER;
+				}
+			break;
+
+		case PASSWORDS_ENTER:
+			break;
+		
+		case PASSWORDS_UNLOCK:
+#ifdef MODIFY_PASSWORD_3308
+                        if((oldpassword!=UserSet.parent_passwd)&&(oldpassword!=USER_SUPER_PASSWORD))
+#else
+			if(oldpassword!=UserSet.parent_passwd)
+#endif
+				{
+				passwordstate=PASSWORDS_INIT;
+				ShowSetupPassword("");
+				}
+			else 
+				{
+				if(confirmpassword==newpassword)
+					{
+				      if(newpassword!=0xffff)
+					UserSet.parent_passwd=newpassword;
+					UserSet.parental_ststus=C_UNLOCK;
+					passwordstate=PASSWORDS_NULL;
+					setup_gui_state=SETUPGUI_MENU;
+                    setup_mLevel = SETUP_ML2;
+                    setup_pos[SETUP_ML0] = setup_mLevel;
+                    setup_pos[SETUP_ML3] = 0;
+					}
+				else
+					{
+					reset_passwd_cnt();
+					passwordstate=PASSWORDS_NEW;
+					Draw_RoundBox(PASSWORDGUI_XSTART+2,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,12+22*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_BGCOLOR,PASSWORDGUI_BGCOLOR);
+					osd_DrawString_ori(PASSWORDGUI_XSTART+8,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*4,"PRESS ENTER TO CANCEL.",PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR);
+					Draw_Border(PASSWORDGUI_XSTART-2+PASSWORDGUI_XPW,PASSWORDGUI_YSTART+4+SETUP_BUTTON_HEIGHT*2,20+4*16,SETUP_BUTTON_HEIGHT,PASSWORDGUI_FONTCOLOR,PASSWORDGUI_BGCOLOR,PASSWORDGUI_FILLCOLOR);
+					ShowSetupPassword("----");
+					}
+				}
+			break;
+		
+		case PASSWORDS_NULL:
+			break;
+		
+		default:
+			passwordstate=PASSWORDS_NULL;
+			break;
+		}
+}
+
+

@@ -1,0 +1,121 @@
+#include "user_init.h"
+
+REM============== initialization =====================
+@ECHO OFF
+
+#ifdef SDRAM_16Mb_Mode
+SET SDRAM_PARAM=16
+#else
+SET SDRAM_PARAM=32
+#endif
+
+#if !(defined(IC_8202D)|| defined(IC_8202L)|| defined(IC_8203A))    // for 8202A & 8202S
+SET MAKE_ARGUEMENT=XB2='xb2_AS'
+#else
+SET MAKE_ARGUEMENT=XB2='xb2'
+#endif
+
+#ifdef IC_8202L
+SET DOWNLOAD_EXE=down.exe
+#else
+SET DOWNLOAD_EXE=package\ep4.exe
+if exist package\down.exe SET DOWNLOAD_EXE=package\down.exe
+#endif
+
+SET DOWNLOAD_FILE=rom.bin
+
+SET path_saved=%path%
+SET path=.\package;%path%
+
+
+REM============== start =====================
+:start
+
+
+REM============== ir.bat =====================
+if exist ir_vfd\makefile call ir.bat %SDRAM_PARAM%
+if not exist mipsel-elf\libir_8202.a goto end
+
+
+REM============== Makefile =====================
+del *.obj
+del rom.bin
+del romL.bin
+
+del icon.c
+cpp -P -traditional -D__EMU__ -DFINALSYS -I. -Ih -x c++ icon_original.c > icon.c
+
+font_parse.exe
+
+make %MAKE_ARGUEMENT%
+
+if %ERRORLEVEL%==0 goto MakeOK
+
+REM============== MAKENG =====================
+:MAKENG
+echo *************************
+echo Failed on generating rom.bin
+echo *************************
+
+goto end
+
+REM============== MAKEOK =====================
+:MAKEOK
+del *.bz
+del *.dump
+del *.rz
+
+if not exist DVD_A_KEY\devk2.bin goto load
+patchit -t 256 rom.bin DVD_A_KEY\devk2.bin
+checksum8200 rom.bin 32
+
+
+:load
+REM==============LINRC FOR BOOT LOAD=====================
+if /i "%2" == "roma" goto MakeromA
+if /i "%2" == "romab" goto MakeromAB
+if /i "%2" == "romb" goto MakeromB
+if /i "%2" == "" goto Download
+goto Download
+
+
+REM============== MakeromA =====================
+:MakeromA
+echo ***************BOOTLOAD romA.bin********************
+create roma.bin
+copyto roml.bin roma.bin
+SET DOWNLOAD_FILE=romL.bin
+goto Download
+
+
+REM============== MakeromAB =====================
+:MakeromAB
+echo **************BOOTLOAD romA+B.bin******************
+ECHO ****************checksum****************
+checksum2 roml.bin 257 1024 1024 262196 
+ECHO ******************COPY******************
+copyto roma.bin roml.bin
+CheckSum8200 roml.bin 32
+SET DOWNLOAD_FILE=romL.bin
+goto Download
+
+
+REM============== makeromB =====================
+:makeromB
+echo ***************BOOTLOAD romB.bin********************
+ECHO ****************checksum****************
+checksum2 roml.bin 1 1024 1024 80
+goto Download
+
+
+REM============== Download =====================
+:Download
+dir rom*.bin
+%DOWNLOAD_EXE% %DOWNLOAD_FILE%
+goto end
+
+
+REM============== end =====================
+SET path=%path_saved%
+SET path_saved=
+:end

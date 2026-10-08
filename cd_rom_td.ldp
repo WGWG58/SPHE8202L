@@ -1,0 +1,152 @@
+/*
+* History 
+* terry,2005/6/22 10:53¤U¤È
+* terry,2005/6/23 04:56¤U¤È
+*/
+
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+
+    /*
+    *  navigation
+    */
+    .drv_dvd :
+    {
+        _text_drv_dvd = .;
+        .       = ALIGN(16);
+    } > sdram_dvd
+
+
+    .drv_cdrom :
+    {
+        _text_drv_cdrom = .;
+
+#ifndef UNLOAD_ROMCODE
+    #ifdef LOAD_CDROM
+        *fsCDDA.o   (.rodata*)   //kevinmonkey 050516 move to the top of this section
+        *fsCDDA.o   (.text*)    //since when turbo decode, CDDA and DVD uses more servo
+                                //buffer, so if fsCDDA is placed in lower position, it got
+                                //polluted by servo buffer
+    #endif 
+
+        //*flash.o       (.text*)   // 2005/12/28 yltseng, move to .drv_ap1
+        //*flash.o       (.rodata*)
+
+#ifdef LOAD_CDROM
+        *ThumbNav.o    (.rodata*)
+        *ThumbNav.o    (.text*)
+        *fsGUI.o       (.text*)
+        *fsGUI.o       (.rodata*)
+        *udf.o         (.text*)
+        *udf.o         (.rodata*)
+
+    #ifndef JPG_OLD_PARSER_FLOW        
+        *pic_effect.o   (.rodata*)
+        *pic_effect.o   (.text*)
+    #endif        
+
+    #ifndef SUPPORT_USB //kevinmonkey 060905, only because fs9660 code become larger when USB is enabled.
+        *fs9660.o      (.text*)
+        *fs9660.o      (.rodata*)
+    #endif  //#ifndef SUPPORT_USB
+
+        *NESInit.o     (.text*)
+        *nesif.o       (.text*)
+        *nesif.o       (.rodata*)
+        *fsGUIX.o   (.text*)
+        *graph.o    (.rodata*)
+        *graph.o    (.text*)
+        
+
+        // dvd navigaion
+        *nav.o      (.text*)
+        *pgc.o      (.text*)
+        *user_if.o  (.text*)
+        *ncmd.o     (.text*)
+        *ncmd_exe.o (.text*)
+        *vts.o      (.text*)
+        *vmg.o      (.text*)
+        *preview.o  (.rodata*)
+        *preview.o  (.text*)
+        *cdg.o      (.rodata*)
+        *cdg.o      (.text*)        
+        *navif.o    (.text*)
+        *book.o     (.text*)
+        
+        *supdec*.o   (.text*)
+//        *slowback.o (.text*)
+        *cdfunc.o   (.text*)    
+        *dvdpe.o    (.text*)        
+        
+       // *repeat.o   (.text*)
+                
+    //kevinmonkey 06094 kick these out since code grows too large
+        //*psd.o      (.rodata*)
+        //*psd.o      (.text*)
+        //*v11.o      (.rodata*)
+        //*v11.o      (.text*)
+        //*svcd.o     (.rodata*)
+        //*svcd.o     (.text*)
+        //*sysmain2.o (.text*)
+        //*fsNAV.o       (.rodata*)
+        //*srv1.o     (.text*)
+        //*prvdrv.o   (.text*)
+        //*fsFile.o   (.rodata*)
+        //*fsFile.o   (.text*)
+
+    #ifdef DVDRELEASE //terry,2005/4/7 06:12¤U¤È,beause of debug mode section full.
+    //#ifndef SUPPORT_MP4_SUBTITLE
+        *fsNAV.o       (.text*)     
+    //#endif        
+    #endif    
+
+    #ifdef SHARE_CDROM_CODE_WITH_SUP
+        *fs_nav_upgrade.o      (.text*)
+        *fs_nav_upgrade.o      (.rodata*)        
+        
+        *gf2m_c.o   (.text*)
+        *rs2420.o   (.text*)
+        *rs42.o     (.rodata*)
+        *rs42.o     (.text*)
+	    *SubEcc.o   (.rodata*)
+	    *SubEcc.o   (.text*)
+        
+        //cannot reduce rom code,        
+        *css-des.o  (.text*)   
+        *css-auth.o (.rodata*)
+        *css-auth.o (.text*)
+        *dvdauth.o  (.text*)
+        *dvdioctl.o (.text*)
+    #endif
+    
+    #ifndef SUPPORT_MP4
+        *atapi_if.o (.text*)
+        *atapi_.o   (.text*)
+        *srv0.o     (.text*)
+        *mainproc.o (.text*)
+        *cderr.o    (.text*)        
+        *cd.o       (.text*)    
+        *int_decerr.o (.text*)
+        
+        *nav_util.o  (.text*)
+
+        #ifdef DVDRELEASE   
+        *viddec.o   (.rodata*)
+        *int_fld.o  (.text*)
+        *int_pend.o (.text*)
+        *genint.o   (.text*)
+        #endif //DVDRELEASE   
+    #endif// SUPPORT_MP4
+    
+#endif //LOAD_CDROM
+#endif //UNLOAD_ROMCODE
+        .       = ALIGN(16);
+    } > sdram_cdrom
+
+
+}
+
+

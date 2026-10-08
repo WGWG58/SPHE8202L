@@ -1,0 +1,26 @@
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+    /*
+    * iop driver
+    */
+    .drv_iop :
+    {
+        _text_drv_iop = .;
+        .       = ALIGN(16);
+        KEEP(*iop.o(.rodata*))
+    } > sdram_drv_iop
+
+    /*
+    * iop standby driver
+    */
+    .drv_iop_rst :
+    {
+        .       = ALIGN(16);
+        KEEP(*ioprom.o(.rodata*))
+    } > sdram_iop_rst
+}
+
+

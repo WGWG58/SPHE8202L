@@ -1,0 +1,69 @@
+/* History
+** terry,2005/4/11 10:12¤U¤È
+** terry,2005/6/23 02:14¤U¤È
+** terry,2005/6/27 06:06¤U¤È
+*/
+
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+    .drv_ap1 :
+    {
+       _text_drv_ap = .;
+#ifndef UNLOAD_ROMCODE
+
+        *flash.o       (.text*)     // 2005/12/28 yltseng, move from .drv_cdrom
+        *flash.o       (.rodata*)
+    #ifndef CUSTOMERS_8104_16_CD    // 2006.8.11 Simon Lai
+        *flash_parallel.o   (.text*)
+        *flash_parallel.o   (.rodata*)
+        *flash_spi.o    (.text*)
+        *flash_spi.o    (.rodata*)
+    #endif
+     
+    #ifdef LOAD_SERVO
+       *polling.o          (.text*)
+       *gpio.o              (.text*)
+       *IdeMain.o       (.text*)
+       #ifdef DVDRELEASE     
+       *TimerISR.o      (.text*)
+       *DecISR.o         (.text*)
+       *intdrv.o            (.text*)  
+       *ninf.o               (.text*) 
+       *Atapicmd.o     (.text*)
+       *DecSubEcc.o  (.rodata*)
+        *IdeMain.o       (.rodata*)
+       *Atapicmd.o     (.rodata*)
+       *DecISR.o         (.rodata*)
+       #endif // DVDRELEASE             
+    //kevinmonkey 06094 kick these out since code grows too large
+       //*ir_drv.o            (.text*)
+       //*time.o              (.text*)
+/*
+       *Servo.o        (.text*)
+       *Servo.o        (.rodata*)
+       *DecUtil.o      (.text*)
+       *DecUtil.o      (.rodata*)   // move to dvd_drv.ldp       
+       //*DecInit.o      (.text*)       
+       *DecUpdt.o      (.text*)
+       *DecUpdt.o      (.rodata*)
+       *DSPCode.o      (.text*)
+       *SUtil.o        (.text*)
+
+       //*DecExUtil.o    (.text*)
+       *DecExUtil.o    (.rodata*)
+       *ServoSet.o     (.text*)
+       *ServoSet.o     (.rodata*)
+       *SrvCom.o       (.text*)
+*/
+       
+    #endif //LOAD_SERVO
+#endif  //UNLOAD_ROMCODE
+
+       .        = ALIGN(16);
+    } > sdram_ap1
+}
+
+

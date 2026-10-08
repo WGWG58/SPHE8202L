@@ -1,0 +1,102 @@
+SECTIONS
+{
+/*===========================================================================
+* free code drv
+*=============================================================================*/
+    .drv_free :
+    {
+        _text_drv_free = .;
+    #ifndef UNLOAD_ROMCODE
+        #ifdef LOAD_AP
+            #ifndef SUPPORT_JPEG_MIC //terry,2004/1/7 07:12PM
+                #if  !defined(PMP_DVD)&&!defined(BBK_DVD)&&!defined(NINTAUS_DVD)&&!defined(GBM_CARD_READER)||defined(NIN_612_4M)  //nono 4-2-2 15:15 
+        // osd lib       2005/04/28 yltseng
+        *osd1.o               (.rodata*)
+        *osd3.o               (.rodata*)
+        *osdv2.o              (.rodata*)
+        *osd_midi.o           (.rodata*)
+        *osd_BmpUI.o          (.rodata*)
+
+    #ifndef SUPPORT_SW_OSD_SCALING  //kevinmonkey 060726 osd too large
+        *osd_AppRegionInit.o  (.rodata*)
+    #endif //#ifndef SUPPORT_SW_OSD_SCALING
+        *osd_WndProc.o        (.rodata*)
+        *osd_ShowWarningBox.o (.rodata*)
+        *osd_AppDraw.o        (.rodata*)
+       
+        *osd_customers.o      (.rodata*)
+        *osd_draw.o           (.rodata*)
+        *osd_hw.o             (.rodata*)
+                #endif       
+
+        *macro.o        (.text*)
+        *macro.o        (.rodata*)
+        *image.o        (.text*)
+        *iop.o          (.text*)
+                #if defined(DIP_CFG_ENABLE) || !(defined(LOAD_AP_OTHER)&&!defined(DVD_AUDIO)&&!defined(DVD_ESP_2S)) //kevinmonkey 050323 avoid multiple declaration
+        *cderr.o        (.text*)
+                #endif
+        *cderr.o        (.rodata*)
+        *hostx.o        (.text*)
+        *hostx.o        (.rodata*)
+        *dsp3_if.o      (.text*)
+        *dsp3_if.o      (.rodata*)
+       
+        // 2005/04/28 yltseng
+        *fs_file_ext_info_tab.o	(.text*)
+        *fs_file_ext_info_tab.o	(.rodata*)
+        *fsNav_util.o   (.text*)
+        *fsNav_util.o   (.rodata*)
+        *fsGUI_util.o   (.text*)
+        *fsGUI_util.o   (.rodata*)
+        *fsGUIShowFont.o (.text*)    // 2004/02/01 yltseng
+        *fsGUIShowFont.o(.rodata*)
+        *framebuf*.o     (.text*)
+
+        *sound.o        (.text*)
+        *fs.o           (.text*)
+        *fs.o           (.rodata*)
+        *vpp_728.o      (.text*)
+
+        *lbaif.o        (.rodata*)
+        *lbaif.o        (.text*)
+
+        *supintr.o      (.text*)
+        *viddec.o       (.text*)      
+
+                #ifdef LOAD_MP4     // 2004/12/16 yltseng
+        *viddec_mp4.o   (.text*)
+                #endif
+                
+        *time.o         (.text*)
+        *time.o         (.rodata*)
+
+        *vpp_728.o      (.rodata*)
+        *sp8200tv.o     (.text*)
+        *sp8200tv.o     (.rodata*)
+
+                #ifdef SUPPORT_MJPEG
+        *mjpeg.o	(.rodata*)
+        *mjpeg.o	(.text*)
+                #endif
+            #endif//#ifndef SUPPORT_JPEG_MIC //terry,2004/1/7 07:12PM
+        #endif//#ifdef LOAD_AP
+    #endif//#ifndef UNLOAD_ROMCODE
+
+       //kevinmonkey 060418 kick this out since code grows too big
+       //*search.o       (.text*)
+       //*search.o       (.rodata*)
+       //#ifndef READ_FAT_LONGNAME	//linrc 2005-3-21 13:22
+       //*jpegeffect.o   (.rodata*)
+       //*jpegeffect.o   (.text*)
+       //#endif
+       //*jpegeffect_help.o   (.rodata*)
+       //*jpegeffect_help.o   (.text*)
+       //*fs9660_util.o  (.text*)
+       //*fs9660_util.o  (.rodata*)
+    } > sdram_free
+}
+
+
+
+

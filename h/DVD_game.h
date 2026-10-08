@@ -1,0 +1,67 @@
+#ifndef _DVD_GAME_H
+#define _DVD_GAME_H
+
+//linrc creat for NATIVE_GAME 2005-10-18 14:30
+
+typedef enum{
+#ifdef SUPPORT_256OSD_CALENDAR     
+     DVB_UISTATE_CALENDAR,
+#endif    
+#ifdef SUPPORT_GAME_BOXMAN    
+     DVB_UISTATE_GAMEBOXMAN,
+#endif
+#ifdef SUPPORT_GAME_TETRIS
+     DVB_UISTATE_GAMETETRIS,
+#endif  
+#ifdef SUPPORT_GAME_HITRAT
+     DVB_UISTATE_GAMEHITRAT,
+#endif 
+#ifdef SUPPORT_GAME_MOUSE
+     DVB_UISTATE_GAMEMOUSE,
+#endif    
+     DVB_UISTATE_NULL,          
+     DVB_MAX_UISTATE
+}DVDGameState_E;
+
+typedef enum{
+     DVB_UIEVENT_UPDOWN = 0,
+     DVB_UIEVENT_LEFTRIGHT,
+     DVB_UIEVENT_SELECT,
+     DVB_UIEVENT_RETURN,
+     DVB_UIEVENT_MENU,
+     DVB_UIEVENT_NUM,
+     DVB_UIEVENT_MUTE,
+     DVB_UIEVENT_VOLUME,
+     DVB_UIEVENT_SWITCHTVRADIO,
+     DVB_UIEVENT_VOLUMETRACK,
+     DVB_UIEVENT_DISSYSINFO,
+     DVB_UIEVENT_LANGUAGE,
+     DVB_UIEVENT_SUBTITLE,
+     DVB_UIEVENT_EPG,
+     DVB_UIEVENT_TTX,
+     DVB_UIEVENT_POWER,
+     DVB_UIEVENT_SETUP,
+     DVB_UIEVENT_PLAYPAUSE,
+     DVB_UIEVENT_ZOOM,
+     DVB_UIEVENT_CHANNEL,
+     DVB_UIEVENT_PREVIEW,
+     DVB_UIEVENT_STOP,
+     #ifdef DVB_IR_3D_ON
+     DVB_UIEVENT_3D,
+     #endif
+     #ifdef DVB_IR_FORMAT_ON
+     DVB_UIEVENT_DISPLAYFORMAT,
+     #endif
+     #ifdef DVB_IR_PSCAN_ON
+     DVB_UIEVENT_PSCAN,
+     #endif
+     DVB_MAX_EVENT
+}DVDGameEvent_E;
+
+void init_BoxMain(void);
+
+#ifdef SUPPORT_GAME_HITRAT
+void Init_HitRat(void);
+#endif
+
+#endif

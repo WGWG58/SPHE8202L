@@ -1,0 +1,1 @@
+set path=d:\gccl2\bin;

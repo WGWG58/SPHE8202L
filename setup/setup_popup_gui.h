@@ -1,0 +1,24 @@
+#ifndef _SETUP_POPUP_GUI_H
+#define _SETUP_POPUP_GUI_H
+typedef enum
+{
+    SETUPGUI_MENU=0,
+    SETUPGUI_PASSWORD,
+    SETUPGUI_TESTINTERLACE,
+    SETUPGUI_VIDEO,
+    #ifdef SUPPORT_SETUP_POPUP_TESTSPK_GUI
+    SETUPGUI_TESTSPK,
+    #endif
+    #ifdef SUPPORT_SETUP_POPUP_MEDIA_GUI
+    SETUPGUI_MEDIA,
+    #endif
+#ifdef SETUP_POPUP_PSCAN_WARNING_GUI
+	SETUPGUI_PSCAN_WARNING,
+#endif
+} SETUPGUI_TYPE;
+
+extern SETUPGUI_TYPE setup_gui_state;
+void setup_GetPos_PopUp(UINT8 direction);
+
+#endif//#ifndef _SETUP_POPUP_GUI_H
+

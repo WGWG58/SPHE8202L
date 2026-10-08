@@ -1,0 +1,557 @@
+/*
+*  History
+*  Terry,2004/2/6 05:38PM
+*/
+#include "set.h"
+#include "user_init.h"
+#include "load.h"
+#include "memmap0.h"
+
+/*
+** FILE
+** dvdL.ld
+** DESCRIPTION
+** linker script for dvd system (in little-endian mode)
+**
+** ****************
+** EMU-type0
+**
+** ROM      88000000
+**          00400000
+** SDRAM    80000000
+**
+** ****************
+** EMU-type1 & ASIC-type0
+**
+** ROM      88000000 (granuate A)
+**          80000000 (granuate ABC)
+** SDRAM    80000000
+*/
+
+/*
+** this file is VERY IMPORTANT for all systems. please keep
+** every thing simple here for cleaness.
+*/
+
+#include "input_lib.h"
+
+#define TO080(y)    (0x080000000+1024*(y))
+#define TO180(y)	(0x180000000+1024*(y))
+#define K(y)        (1024*(y))
+
+//data ram,terry,2004/7/26 02:51PM
+#define TO_DR(x,y)  (0x0bfff0000+1024*(y)+x)  
+
+//stack pointer
+#include "stack.ldp"
+
+
+//Sections , Terry ,2005/4/4 09:28下午
+#include "dvd_iop.ldp"
+#include "boot_flash.ldp"
+#if defined(TURBO_DECODE)&& (defined(DVD_SRV_BUF_SMALL)&&defined(SUPPORT_MP4 ))
+#include "cd_rom_td.ldp"
+#else
+#include "dvd_cd_rom.ldp"
+#endif
+
+#if defined(TURBO_DECODE)&& !defined(SUPPORT_MP4_SUBTITLE)
+#include "ap1_td.ldp"
+#else
+#include "dvd_ap1.ldp"
+#endif
+
+#if defined(SUPPORT_8202_DVB) //terry,2005/10/13 01:37下午
+#include "dvd_dvb.ldp"
+#endif
+
+#ifdef LOAD_MANY_CODE_TO_64M_SDRAM
+#include "drv_free_64M.ldp"
+#else
+#include "drv_free.ldp"
+#endif //LOAD_MANY_CODE_TO_64M_SDRAM
+
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+ 
+    /*
+    * mpeg driver
+    */
+    .ramdrv1 :
+    {
+        _text_drv = .;
+        .       = ALIGN(16);
+        
+#ifndef UNLOAD_ROMCODE
+    #ifdef LOAD_MPEG
+        *mpegsys*.o (.text*)
+        *supdrv*.o  (.text*)        //terry,2004/2/4 04:22PM
+        
+        #if !defined(BBK_DVD)&&!defined(NINTAUS_DVD) ||defined(NIN_612_4M) //terry,2003/12/17 06:18PM
+        *setup_ui1.o (.text*)
+        #endif
+
+        #if defined(TURBO_DECODE)&& !defined(SUPPORT_DVD_FULL_SUBTITLE)
+        *DecExUtil.o      (.text*)       
+        *DecInit.o      (.text*)
+        #endif
+
+        #if 0//defined(TURBO_DECODE)&& defined(COMPRESS_ROM_CODE_040)
+        *DecExUtil.o      (.text*)       
+        *DecInit.o      (.text*)
+        *time.o      (.text*)
+        *time.o      (.rodata*)
+        *mpegsys.o      (.rodata*)
+        #endif  //#if defined(TURBO_DECODE)&& defined(COMPRESS_ROM_CODE_040) load it up...
+
+    #endif  //#ifdef LOAD_MPEG
+#endif  //#ifndef UNLOAD_ROMCODE
+    } > sdram_drv1
+
+    /*
+    * jpeg driver
+    */
+    .ramdrv2 :
+    {
+        _text_drv2 = .; //terry,2005/4/7 10:53下午
+        .       = ALIGN(16);
+#ifndef UNLOAD_ROMCODE
+#ifdef LOAD_JPEG
+        *jpegtest.o (.rodata*)
+        *jpegtest.o (.text*)
+
+        *jpegeffect.o (.rodata*)
+        *jpegeffect.o (.text*)
+
+    #ifndef JPG_OLD_PARSER_FLOW
+        *jpeg_callback_check.o (.rodata*)
+        *jpeg_callback_check.o (.text*)
+
+//     *pic_nav.o (.rodata*)
+//     *pic_nav.o (.text*)
+        
+        //*pic_effect.o   (.rodata*)
+        //*pic_effect.o   (.text*)
+
+//     *pic_effect2.o (.rodata*)
+//     *pic_effect2.o (.text*)
+
+        *pic_effect_api.o (.rodata*)
+        *pic_effect_api.o (.text*)
+    #endif        
+#endif
+#endif
+    } > sdram_drv2
+   
+
+    .drv_ap2 :
+    {
+        _text_drv_ap2 = .;
+#ifndef UNLOAD_ROMCODE
+  #ifdef LOAD_AP
+	#ifndef SUPPORT_8202_DVB //David 2005-7-15 16:14
+       *setup.o        (.text*)
+    #endif
+    
+	//nono mark it.20050906
+	#if 0//!defined(BOOT_LOAD_ROMA)&&!defined(SUPPORT_8202D_EXT_ADC) //terry,2005/3/6 10:16PM       
+       *intdrv.o        (.text*)   
+    #endif
+    #if !defined( SUPPORT_PROLOGIC_II )/*ycwen 2005/5/17*/ && !defined(SUPPORT_SW_OSD_SCALING) /*kevinmonkey 060726 setup too large*/
+       *prog.o          (.text*) 
+    #endif   
+  #endif
+#endif
+       .        = ALIGN(16);
+    } > sdram_ap2
+
+    .drv_ap3 :
+    {
+        .       = ALIGN(16);
+#ifndef UNLOAD_ROMCODE
+#ifdef LOAD_AP
+       //*prog.o         (.text*)
+       //*sound.o        (.text*)
+#endif
+#endif
+    } > sdram_ap3
+
+    .drv_srvdp :
+    {
+        _text_drv_srvdp = .;
+#ifndef UNLOAD_ROMCODE
+       *DSPCode.o      (.rodata*)
+#endif
+    } > sdram_srvdp
+
+
+
+    .drv_mp4 :
+    {//terry,2005/5/20 01:56下午
+    } > sdram_mp4
+
+
+    .drv_wma :
+    {//terry,2005/5/20 01:56下午
+        _text_drv_wma = .;
+#ifndef UNLOAD_ROMCODE
+    #ifdef LOAD_WMA
+        *asfheader.o    (.text*)
+        *asfheader.o    (.rodata*)
+        *asfdata.o      (.text*)
+        *asfdata.o      (.rodata*)
+        #ifndef DVB_DVD_8202//marked 06/02/21(load thess files will cause system halt:playing wma--->press "other files" bottom...)
+        *asfheader.o	   (COMMON*)
+        *asfdata.o      (.scommon*)
+        #endif  //#ifndef DVB_DVD_8202
+
+        #ifdef SUPPORT_OGG
+        *OGG_Parser.o    (.text*)
+        *OGG_Parser.o    (.rodata*)
+        *OGG_Parser.o    (.data*)
+        *OGG_Parser.o    (.sdata*)
+        *OGG_Parser.o	(COMMON*)
+        *OGG_Parser.o    (.scommon*)
+        #endif  //#ifdef SUPPORT_OGG
+    #endif  //#ifdef LOAD_WMA
+
+    #ifdef LOAD_MP4
+        #ifdef SUPPORT_MP4
+        *mp4vid.o       (.text*)
+        *mp4vid.o       (.rodata*)
+        *mp4vid.o       (.bss*)
+        *mp4vid.o       (COMMON*)
+        *mp4vid.o       (.sbss*)
+        *mp4vid.o       (.scommon*)       
+        *avi_if.o       (.text*)
+        *avi_if.o       (.rodata*)
+        *ShowMp4OSDText.o       (.text*)
+        *ShowMp4OSDText.o       (.rodata*)
+        *ShowMp4OSDText.o       (.bss*)
+        *ShowMp4OSDText.o       (COMMON*)
+        *ShowMp4OSDText.o       (.sbss*)
+        *ShowMp4OSDText.o       (.scommon*)
+        /*
+        *drm.o       (.text*)
+        *drm.o       (.rodata*)
+        *drm.o       (.bss*)
+        *drm.o       (COMMON*)
+        *drm.o       (.sbss*)
+        *drm.o       (.scommon*)               
+        //*drm_table.o (.rodata*)
+        */
+        #endif //#ifdef SUPPORT_MP4
+    #endif //LOAD_MP4
+#endif  //#ifndef UNLOAD_ROMCODE
+    } > sdram_wma
+
+
+/*===========================================================================
+// ROM 1
+//===========================================================================*/
+    /*
+    ** .rom1: text image
+    **
+    ** this section keeps all the text-section rom image.
+    ** the order of first few files is to ensure there will
+    ** not be any cache trashing.  don't modify it unless
+    ** you know what you are doing.
+    **
+    */
+    .rom1 :
+    {
+#ifndef  LOAD_OTHER
+        /* normal */
+        MIPS/init0.o    (.text*)         /* boot code */
+
+#ifndef DVDRELEASE
+        *viddec.o   (.text*)
+        *viddec.o   (.rodata*)
+        *intdrv.o   (.text*)        
+        *int_fld.o      (.text*)
+        *int_pend.o     (.text*)
+        *genint.o       (.text*)
+#endif
+        
+        
+/*        *srv*.o         (.text*)*/
+        *               (.text*)
+        MIPS/crt0.o     (.text*)         /* c runtime code */
+#else
+        /* download all code to SDRAM */
+        MIPS/init0.o    (.text*)         /* boot code            */
+        MIPS/rominit.o  (.text*)         /* data/bss init code   */
+        MIPS/crt0.o     (.text*)         /* c runtime code       */
+        *reset.o        (.text*)         /* reset routine        */
+        *sysmain.o      (.text*)         /* c main-routine       */
+        *lexra.o        (.text*)        
+        *dsp3_config.o  (.text*)
+        *bitop.o        (.text*)
+        *dtsrom.o       (.rodata*)
+        *intdrv.o       (.text*)      
+        
+        *emuio.o        (.text*)
+        
+        *uart0fifo.o    (.text*)        
+        *other.o        (.text*)
+        *sdram.o        (.text*)
+        *sio.o          (.text*)
+        *sio.o          (.rodata*)
+        *uart1null.o     (.text*)
+        
+        *hwcpu*.o       (.text*)
+        *crt0.o         (.rodata*)
+        *init0.o        (.rodata*)        
+#endif
+        . = ALIGN(16);
+    } > rom
+
+/*===========================================================================
+ SDRAM 2, global var.
+===========================================================================*/
+    /*
+    ** .ram1: DATA section
+    **
+    ** this section is the virtual mapping of data-sections.
+    ** data section is for initialized read/write variables.
+    ** we have to store the initial value of these variables
+    ** somewhere(.rom1_2).  during building the binary image
+    ** we will dumping .ram1 content to .rom1_2
+    **
+    */
+    .ram1 :
+    {
+        _data           = .;        /* beginning of data segment */
+#ifdef BOOT_LOAD_CODE        
+        *sysmain.o     (.sdata*)
+#endif        
+        *              (.data*)
+        _gp             = .;        /* $gp global pointer, _gp for crt0.S to load */        
+        *              (.sdata*)
+        *              (.lit8*)
+        *              (.lit4*)
+        *              (.lita*)
+        _edata      = .;            /* end of data area (to be copied from ROM) */
+        .       = ALIGN(16);
+    } > sdram_cs
+
+/*===========================================================================
+ ROM 2
+===========================================================================*/
+
+    /*
+    ** .rom1_2: padding section for DATA initialization
+    */
+    .rom1_2 :
+    {
+        _data_ps = .;
+        .       += SIZEOF(.ram1);
+        _data_pe  = .;
+        .       = ALIGN(16);
+    } > rom
+
+
+    /*
+    ** .rom2: constant data
+    */
+    .rom2 :
+    {
+        /* CONSTANT DATA (read-only) */
+#ifndef  LOAD_OTHER
+        *               (.rdata*)
+        *               (.rodata*)
+#else
+        /* only load these essential data to ROM */
+        MIPS/rominit.o  (.rodata*)
+        MIPS/crt0.o     (.rodata*)
+        *reset.o        (.rodata*)
+        *sysmain.o      (.rodata*)
+        *lexra.o        (.rodata*)
+        //*memcfg.o       (.rodata*)
+        *dsp3_config.o  (.rodata*)
+        *bitop.o        (.rodata*)
+/*        MIPS/title.o    (.rodata*)*/
+#endif
+        .               = ALIGN(16);
+    } > rom
+
+
+	.rom3 :
+    {
+        MIPS/title.o    (.rodata*)
+        .               = ALIGN(16);
+    } > rom_title
+
+
+/*===========================================================================
+// SDRAM 3
+//===========================================================================*/
+
+    .ram_jpeg :
+    {
+    #ifdef JPG_OLD_PARSER_FLOW
+        *jpegtest.o		(.bss*)
+        *jpegtest.o		(COMMON*)
+		*mjpeg.o	(.bss*)
+		*mjpeg.o	(COMMON*)
+    #endif
+		//*mjpeg.o	(.sbss*)
+		//*mjpeg.o	(.scommon*)		
+        .       = ALIGN(16);
+    } > sdram_jpeg
+
+
+    .drv_other :
+    {
+        _text_other = .;
+#ifdef  LOAD_OTHER
+        *       (.text*)
+        *       (.rodata*)
+#endif
+        .       = ALIGN(16);
+    } > sdram_other
+
+
+
+    /*
+    ** .ramf
+    ** fast un-initialized variable storage.
+    **
+    */
+    .ramF :
+    {
+        MIPS/databuf.o  (.bss*)
+        MIPS/databuf.o  (COMMON*)
+        .       = ALIGN(16);
+    } > sdram_cs
+
+    /*
+    ** .ram2: un-initialized data
+    */
+    .ram2 :
+    {
+        _bstart     = .;
+        *       (.sbss*)
+        *       (.scommon*)
+        *       (.bss*)
+        *       (COMMON*)
+        .       = ALIGN(16);
+        _bend       = .;
+    } > sdram_cs
+
+    .rel :
+    {
+        *       (.rel.dyn)
+    } > garbage
+
+
+    _etext = ADDR(.rom1) + SIZEOF(.rom1) + SIZEOF(.rom2);  /* end of ROM image */
+    _stextf = _etext + SIZEOF(.ram1);
+
+    _tt_gb_size = SIZEOF(.ram1) + SIZEOF(.ram2) + SIZEOF(.ramF);
+
+
+    .udf_buf :
+    {
+        _udf_work_buf = .;
+        . += K(UDF_WORK_BUF_SIZE);
+        _udf_work_buf_end = .;
+    } > sdram_udfbuf
+
+
+#if !defined( SDRAM_16Mb_Mode ) || !defined( SUPPORT_FILE_SYSTEM_MODE )		// 2004/06/12 yltseng
+    #if !defined(FAT_FILE_MODE)&&!defined(FILE_MODE_WRITE)//liweihua 2004-10-20 17:25//sunzhh 2004-12-30
+    _fs9660_buf     = TO080(FS9660YA);
+#endif
+#endif
+
+#if !defined(MOVE_NAV_BUF)
+    wb_buf          = TO080(N_NAVYA);
+#endif
+
+#ifdef SUPPORT_TELETEXT  // tcf added 2005-11-15 13:08
+	wstfont2_bits  = TO080(DVB_TTX_TEMP_TTXFONT_START);
+#endif
+#ifndef SDRAM_16Mb_Mode
+    decomp_fnTable  = TO080(COMP_OSD_FONT);
+    osd_temp_buf    = TO080(OSD0_TEMP_YA);
+#endif
+
+/*===========================================================================
+// STACK
+//===========================================================================*/
+
+
+    /*
+    ** STACK location , 1.7K ,terry,2004/7/26 02:51PM
+    */    
+    _stkptr         = STK_PTR;
+    _stkptr_dbg     = STK_DBG_PTR;
+
+    _stkbtm         = STK_BTM_PTR;
+    _stkbtm_dbg     = STK_DBG_BTM_PTR;    
+}
+
+NOCROSSREFS( .ramdrv1 .ramdrv2 )
+NOCROSSREFS( .drv_ap2 .drv_ap3 )
+
+MEMORY
+{
+    garbage   : org = 0x00000000, l = 1m
+    bootrom   : org = 0xbfc00000, l = 512k    /* Un-cached ROM boot       */
+    rom       : org = 0x88000000, l = 1024k   /* cached ROM image in ROM  */
+	rom_title :	org = 0x88000000+987*1024, l = 37k
+
+    /*
+    * reference memmap0b.txt
+    */
+#if defined(USE_C_IOP)
+    sdram_drv_iop : org = 0x080400000, l = 64k                               /* 0000 */
+    sdram_iop_rst : org = 0x180400000, l = 64k                               /* 0000 */
+#elif defined(DECREASE_ESP_BUFFER_AS_IOP_BUFFER)/*must use 4M*16 SDRAM!Jack added 06/03/13*/
+    sdram_drv_iop : org = 0x0807ff800, l = 2k                               /* 8190 */
+    sdram_iop_rst : org = 0x1807ff800, l = 2k                               /* 8190 */
+#else
+    sdram_drv_iop : org = 0x080000000, l = 2k                               /* 0000 */
+    sdram_iop_rst : org = 0x180000000, l = 2k                               /* 0000 */
+#endif
+    sdram_cs      : org = TO080(SDRAM_CS_ST),		l = K(SDRAM_CS_SZ)    /* 0007 */
+    sdram_jpeg    : org = TO080(JPEG_CODE_YA),		l = K(JPEG_CODE_SIZE)      /* 3422 */
+    sdram_flash   : org = TO180(100),				l = 10k                    /* 0100 */
+    sdram_drv1    : org = TO080(DRV1_ST),			l = K(DRV1_CODESIZE) /* PCM_YA=51 */    //050407 kevinmonkey seperate drv1/drv2
+    sdram_drv2    : org = TO180(DRV2_ST),			l = K(DRV2_CODESIZE) /* PCM_YA=51 */    //050407 kevinmonkey seperate drv1/drv2
+    sdram_ap2     : org = TO080(AP2N3_ST),			l = K(AP2_CODESIZE)      /* 2566 */
+    sdram_ap3     : org = TO180(AP2N3_ST),			l = K(AP3_CODESIZE)      /* 2566 */
+    sdram_ap1     : org = TO080(AP1_ST),			l = K(AP_CODESIZE)         /* 2598 */
+    sdram_udfbuf  : org = TO080(A_UDF_WORK_BUF),	l = K(UDF_WORK_BUF_SIZE)       /* 2744 */
+
+    sdram_srvdp   : org = TO080(A_SERVO_YA),		l = K(SERVO_SIZE)      /* 2028 */
+    sdram_cdrom   : org = TO080(CDROM_CODE_YA),		l = K(CDROM_CODE_SIZE)      /* 1968 */
+    sdram_dvd     : org = TO080(DVD_NAV_CODE),		l =K(DVD_CODE_SIZE) /* 3770 */    
+
+    sdram_mp4     : org = TO080(A_MP4_CODE_YA),		l = K(MP4_CODE_SIZE)
+    sdram_wma     : org = TO080(A_WMA_CODE_YA),		l = K(WMA_CODE_SIZE)
+
+#ifdef DVDRELEASE
+    #ifdef SDRAM_16Mb_Mode
+    sdram_free    : org = TO080(FREE_CODE_YA),		l = K(FREE_CODESIZE+1)       /* 4022 */
+    #else
+    sdram_free    : org = TO080(FREE_CODE_YA),		l = K(FREE_CODESIZE+2)       /* 4022 */
+    #endif
+#else
+    sdram_free    : org = TO080(FREE_CODE_YA),		l = K(FREE_CODESIZE)       /* 4022 */
+#endif
+
+#ifdef SUPPORT_8202_DVB
+    sdram_dvb     : org = TO080(DVB_CODE_YA),       l = K(DVB_CODESIZE)            /* 4096 */
+#endif    
+    sdram_other   : org = 0x180700000, l = 1024k                            /* 7168 */
+}
+
+
+ENTRY(__romstart)
+
+

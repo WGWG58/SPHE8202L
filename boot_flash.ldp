@@ -1,0 +1,28 @@
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+/*
+    * boot-strap
+    */
+    .boot_flash :
+    {
+        *boot_flashs.o (.text*)
+        *boot_flashs.o (.rodata*)
+        KEEP(*boot_flash.o  (.text*))
+        *boot_flash.o  (.rodata*)
+        *boot_emuio.o  (.text*)
+        *boot_emuio.o  (.rodata*)
+        *boot_uart.o   (.text*)
+        *boot_uart.o   (.rodata*)
+        *boot_sio.o    (.text*)
+        *boot_sio.o    (.rodata*)
+
+        .       = ALIGN(16);
+		_text_rombin_start = .;
+    } > sdram_flash
+
+}
+
+

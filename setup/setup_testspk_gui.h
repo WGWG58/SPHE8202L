@@ -1,0 +1,15 @@
+#ifndef _SETUP_TESTSPK_GUI_H
+#define _SETUP_TESTSPK_GUI_H
+typedef enum
+{
+    SETUPGUI_TESTSPK_INIT,
+    SETUPGUI_TESTSPK_NEXT,
+    SETUPGUI_TESTSPK_PREV,
+    SETUPGUI_TESTSPK_VOLUP,
+    SETUPGUI_TESTSPK_VOLDOWN,
+    SETUPGUI_TESTSPK_EXIT,
+}TESTSPK_TYPE;
+void setup_GetPos_Testspk(UINT8 direction);
+void Set_Testspk_Channel_GUI(TESTSPK_TYPE operation);
+#endif//#ifndef _SETUP_TESTSPK_GUI_H
+

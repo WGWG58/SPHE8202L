@@ -1,0 +1,10 @@
+#ifndef	__LINE21_H
+#define __LINE21_H
+
+#define	LINE21_UPDATE_NONE	0
+#define	LINE21_UPDATE_TOP	1
+#define	LINE21_UPDATE_TOP2	2
+#define	LINE21_UPDATE_BOTTOM	3
+#define	LINE21_UPDATE_BOTTOM2	4
+
+#endif

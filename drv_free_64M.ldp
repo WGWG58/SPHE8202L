@@ -1,0 +1,309 @@
+SECTIONS
+{
+/*===========================================================================
+* free code drv
+*=============================================================================*/
+    .drv_free :
+    {
+        _text_drv_free = .;
+
+#ifdef LOAD_MANY_CODE_TO_64M_SDRAM
+#if 1//ndef UNLOAD_ROMCODE
+    #if 1//def LOAD_AP
+        #ifndef SUPPORT_JPEG_MIC //terry,2004/1/7 07:12PM
+            #if  !defined(PMP_DVD)&&!defined(BBK_DVD)&&!defined(NINTAUS_DVD)&&!defined(GBM_CARD_READER)||defined(NIN_612_4M)  //nono 4-2-2 15:15 
+       // osd lib       2005/04/28 yltseng
+       *osd1.o               (.rodata*)
+       *osd3.o               (.rodata*)
+       *osdv2.o              (.rodata*)
+       *osd_midi.o           (.rodata*)
+       *osd_BmpUI.o          (.rodata*)
+       
+       *osd_AppRegionInit.o  (.rodata*)
+       *osd_WndProc.o        (.rodata*)
+       *osd_ShowWarningBox.o (.rodata*)
+       *osd_AppDraw.o        (.rodata*)
+       
+       *osd_customers.o      (.rodata*)
+       *osd_draw.o           (.rodata*)
+       *osd_hw.o             (.rodata*)
+            #endif       
+       *search.o       (.text*)
+       *search.o       (.rodata*)
+       *macro.o        (.text*)
+       *macro.o        (.rodata*)
+       *image.o        (.text*)
+       *iop.o          (.text*)
+            #if defined(DIP_CFG_ENABLE) || !(defined(LOAD_AP_OTHER)&&!defined(DVD_AUDIO)&&!defined(DVD_ESP_2S)) //kevinmonkey 050323 avoid multiple declaration
+       *cderr.o        (.text*)
+            #endif
+       *cderr.o        (.rodata*)
+       *hostx.o        (.text*)
+       *hostx.o        (.rodata*)
+       *dsp3_if.o      (.text*)
+       *dsp3_if.o      (.rodata*)
+       
+       // 2005/04/28 yltseng
+       *fs_file_ext_info_tab.o	(.text*)
+       *fs_file_ext_info_tab.o	(.rodata*)       
+       *fs9660_util.o  (.text*)
+       *fs9660_util.o  (.rodata*)
+       *fsNav_util.o   (.text*)
+       *fsNav_util.o   (.rodata*)
+       *fsGUI_util.o   (.text*)
+       *fsGUI_util.o   (.rodata*)
+       *fsGUIShowFont.o (.text*)    // 2004/02/01 yltseng
+       *fsGUIShowFont.o(.rodata*)
+       *framebuf*.o     (.text*)
+
+       *sound.o        (.text*)
+       *fs.o           (.text*)
+       *fs.o           (.rodata*)
+       *vpp_728.o      (.text*)
+ 
+#ifdef DVDRELEASE
+       #ifndef READ_FAT_LONGNAME	//linrc 2005-3-21 13:22
+       *jpegeffect.o   (.rodata*)
+       *jpegeffect.o   (.text*)
+       #endif
+
+       //*jpegeffect_help.o   (.rodata*)
+       //*jpegeffect_help.o   (.text*)
+
+       *lbaif.o        (.rodata*)
+       *lbaif.o        (.text*)
+
+       *supintr.o      (.text*)
+       *viddec.o       (.text*)      
+
+                #ifdef LOAD_MP4     // 2004/12/16 yltseng
+        *viddec_mp4.o   (.text*)
+                #endif
+                
+       *time.o         (.text*)
+       *time.o         (.rodata*)
+
+       *vpp_728.o      (.rodata*)
+       *sp8200tv.o     (.text*)
+       *sp8200tv.o     (.rodata*)
+
+                #ifdef SUPPORT_MJPEG
+        *mjpeg.o	(.rodata*)
+        *mjpeg.o	(.text*)
+                #endif
+
+            #endif//#ifdef DVDRELEASE
+
+        #endif//#ifndef SUPPORT_JPEG_MIC //terry,2004/1/7 07:12PM
+
+    #endif//#ifdef LOAD_AP
+    
+#endif//#ifndef UNLOAD_ROMCODE
+
+        
+       *ircmd.o        (.rodata*)
+       *ircmd.o        (.text*)
+       *ir_parser.o    (.rodata*)
+       *ir_parser.o    (.text*)
+       *ir_drv.o       (.text*)
+       *disp.o         (.rodata*)
+       *disp.o         (.text*)
+       *polling.o      (.text*)
+       *sound_if.o     (.text*)
+
+       *audif.o        (.text*)
+       *audif.o        (.rodata*)
+       
+       *auddac.o       (.text*)
+       *auddac.o       (.rodata*)
+       *dspkernel.o    (.text*)
+       *dspkernel.o    (.rodata*)
+       *dspcodecinfo.o (.text*)
+       *dspcodecinfo.o (.rodata*)
+       *audkernel.o    (.text*)
+       *audkernel.o    (.rodata*)
+       *auddrv.o       (.text*)
+       *auddrv.o       (.rodata*)
+       
+       *osd1.o               (.text*)
+       *osd3.o               (.text*)
+       *osdv2.o              (.text*)
+       *osd_midi.o           (.text*)
+       *osd_BmpUI.o          (.text*)
+       
+       *osd_AppRegionInit.o  (.text*)
+       *osd_WndProc.o        (.text*)
+       *osd_ShowWarningBox.o (.text*)
+       *osd_AppDraw.o        (.text*)
+       
+       *osd_customers.o      (.text*)
+       *osd_draw.o           (.text*)
+       *osd_hw.o             (.text*)
+
+       *vfd.o          (.rodata*)
+       *vfd.o          (.text*)
+
+       *setup.o        (.rodata*)
+        
+       *fs_message_show.o   (.rodata*)
+       *fs_message_show.o   (.text*)
+
+       *safe.o         (.rodata*)
+       *safe.o         (.text*)
+       *prog.o         (.rodata*)       
+
+    
+       *Servo.o        (.text*)
+       *Servo.o        (.rodata*)
+       *DecUtil.o      (.text*)
+       *DecUtil.o      (.rodata*)
+       *DecSubEcc.o    (.text*)
+       *DecSubEcc.o    (.rodata*)
+       *IdeMain.o      (.text*)
+       *IdeMain.o      (.rodata*)
+       *DecInit.o      (.text*)
+       *DecISR.o       (.text*)
+       *DecISR.o       (.rodata*)
+       *Atapicmd.o     (.text*)
+       *Atapicmd.o     (.rodata*)
+       *DecUpdt.o      (.text*)
+       *DecUpdt.o      (.rodata*)
+       *DSPCode.o      (.text*)
+       *SUtil.o        (.text*)
+       *Servoset.o     (.text*)
+       *TimerISR.o     (.text*)
+       *DecExUtil.o    (.text*)
+       *DecExUtil.o    (.rodata*)
+       *ServoSet.o     (.text*)
+       *ServoSet.o     (.rodata*)
+       *SrvCom.o       (.text*)
+
+       *avd.o          (.text*)
+       *timer.o        (.text*)
+       *ircode.o       (.rodata*)
+       *osdutil.o      (.rodata*)
+       *font_offset.o  (.rodata*)
+       *sound.o        (.rodata*)
+       *sysmain2.o     (.rodata*)       
+       *estd.o         (.text*) 
+       *supset.o       (.text*) 
+       *cvdogt.o       (.text*) 
+       *sup.o          (.text*) 
+     
+       *memcfg.o       (.text*) 
+       *util.o         (.text*) 
+       *nav_util.o     (.text*)
+       *read.o         (.text*)
+       *score.o        (.text*)
+       *kernel.o       (.text*)
+       *ninf.o         (.text*)
+       *_Xdivdi3.o     (.text*)
+       *setvideo.o     (.text*)
+
+       *cd.o       (.text*)
+
+
+        *nav.o      (.text*)
+        
+        *pgc.o      (.text*)
+      
+        *user_if.o  (.text*)
+        *ncmd.o     (.text*)
+        *ncmd_exe.o (.text*)
+        *vts.o      (.text*)
+        *vmg.o      (.text*)
+        *preview.o  (.rodata*)
+        *preview.o  (.text*)
+        *psd.o      (.rodata*)
+        *psd.o      (.text*)
+        *v11.o      (.rodata*)
+        *v11.o      (.text*)
+
+        *svcd.o     (.rodata*)
+        *svcd.o     (.text*)
+        *cdg.o      (.rodata*)
+        *cdg.o      (.text*)
+        *gf2m_c.o   (.text*)
+        *rs2420.o   (.text*)
+        *rs42.o     (.rodata*)
+        *rs42.o     (.text*)
+        *SubEcc.o (.rodata*)
+        *SubEcc.o (.text*)
+        
+        *navif.o    (.text*)
+        *book.o     (.text*)
+        *srv0.o     (.text*)
+        *srv1.o     (.text*)
+        *prvdrv.o   (.text*)
+        *int_decerr.o (.text*)
+        *supdec*.o   (.text*)
+        *slowback.o (.text*)
+        *cdfunc.o   (.text*)
+        *mainproc.o (.text*)
+        *sysmain2.o (.text*)
+        *dvdpe.o    (.text*)
+        *repeat.o   (.text*)
+                
+        *viddec.o   (.rodata*)
+        *int_fld.o  (.text*)
+        *int_pend.o (.text*)
+        *genint.o   (.text*)
+
+
+
+        *fsCDDA.o   (.rodata*)//nono 4-9-1 12:01 move from sdram_drv1
+        *fsCDDA.o   (.text*)
+
+        *flash.o       (.text*)
+        *flash.o       (.rodata*)
+        *flash_parallel.o   (.text*)
+        *flash_parallel.o   (.rodata*)
+        *flash_spi.o    (.text*)
+        *flash_spi.o    (.rodata*)
+
+        *ThumbNav.o    (.rodata*)
+        *ThumbNav.o    (.text*)
+        *fsNAV.o       (.text*)
+        *fsNAV.o       (.rodata*)
+        *fsGUI.o       (.text*)     //fsgui_pub.c
+        *fsGUI.o       (.rodata*)
+        
+    #ifndef JPG_OLD_PARSER_FLOW        
+        *pic_effect.o   (.rodata*)
+        *pic_effect.o   (.text*)
+    #endif        
+        
+        *fs_nav_upgrade.o      (.text*)
+        *fs_nav_upgrade.o      (.rodata*)        
+
+        *udf.o         (.text*)
+        *udf.o         (.rodata*)
+
+        *fs9660.o      (.text*)
+        *fs9660.o      (.rodata*)
+
+
+
+        *fsFile.o      (.rodata*)
+        *fsFile.o      (.text*)
+        *fsGUIX.o      (.text*)
+#ifdef SUPPORT_RECEIVER        
+        *amp.o          (.rodata*)
+        *amp.o          (.text*)
+        *radio_rds.o    (.rodata*)
+        *radio_rds.o    (.text*)
+        *lc72131.o      (.rodata*)
+        *lc72131.o      (.text*)
+        *rom_bus_io.o   (.rodata*)
+        *rom_bus_io.o   (.text*)
+#endif//SUPPORT_RECEIVER
+
+        
+#endif //LOAD_MANY_CODE_TO_64M_SDRAM         
+
+    } > sdram_free
+}
+
+
+
+

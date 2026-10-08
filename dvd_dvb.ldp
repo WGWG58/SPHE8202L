@@ -1,0 +1,501 @@
+#ifdef SUPPORT_8202_DVB     //terry,2005/10/12 07:51¤U¤È
+#include "memmap0_dvb.h"
+#endif
+
+/*---------------------------------------------------------------------------
+|  Rev	Date	        Author(s)      Status & Comments
+|----------------------------------------------------------------------------
+|  0.1	05/10/12        Terry          creating
+|  0.2  05/12/13        Jack           add/del files(TTX,game,menu)
+|  0.3  06/01/15        Jack           Adjust layout and add some files
+|  0.4  06/01/15        Jack           Adjust some files
+|  
+|---------------------------------------------------------------------------*/
+
+SECTIONS
+{
+    .drv_dvb :
+    {
+#ifdef SUPPORT_8202_DVB     //terry,2005/10/12 07:51¤U¤È    
+        _text_drv_dvb = .;   
+#endif
+
+#ifdef  LOAD_DVB
+        /* demux */		
+        *demux_srv.o         (.text*)
+        *demux_srv.o         (.rodata*)
+        *ts_parser.o         (.text*)
+        *tsif.o              (.text*)
+        *pcr.o               (.text*)
+        *dvb_polling.o       (.text*)
+        *polling.o           (.text*)
+        *dmx_drv.o           (.text*)
+        *demux.o             (.text*)
+        *demux_i2c.o         (.text*)
+        *ts_parser.o         (.rodata*)
+        *tsif.o              (.rodata*)
+        *dvb_polling.o       (.rodata*)
+        *pcr.o               (.rodata*) 
+        *polling.o           (.rodata*)
+        *dmx_drv.o           (.rodata*)
+        *demux.o             (.rodata*)
+        *demux_i2c.o         (.rodata*) 
+    
+        /* game */  
+        *boxman.o            (.text*)
+		*boxmandata.o        (.text*)
+//		*gui.o               (.text*)
+		*palette.o           (.text*)
+		*diamons.o           (.text*)
+		*russiadata.o        (.text*)
+		*RuGame.o            (.text*)
+		*russiastruct.o      (.text*)
+		*russiablockshape.o  (.text*)
+		*gamefont.o          (.text*)		
+		*hitrat.o            (.text*)
+		*hitratdata.o        (.text*)
+		*framebufferAPI.o    (.text*)
+        *boxman.o            (.rodata*)
+		*boxmandata.o        (.rodata*)
+//		*gui.o               (.rodata*)
+		*palette.o           (.rodata*)
+		*diamons.o           (.rodata*)
+		*russiadata.o        (.rodata*)
+		*RuGame.o            (.rodata*)
+		*russiastruct.o      (.rodata*)
+		*russiablockshape.o  (.rodata*)
+		*gamefont.o          (.rodata*)
+        *hitrat.o            (.rodata*)
+		*hitratdata.o        (.rodata*)
+		*framebufferAPI.o    (.rodata*)
+		
+		/* database */		
+		*dvbdb_list.o        (.text*)
+		*dvbdb_handle.o      (.text*)
+	    *dvbdb_network.o     (.text*)
+	    *dvbdb_multiplex.o   (.text*)
+	    *dvbdb_service.o     (.text*)
+	    *dvbdb_global.o      (.text*)
+	    *dvbdb_extended.o    (.text*)
+        *qsort.o             (.text*)
+        *dvbdb_additional.o  (.text*)
+		*dvbdb_list.o        (.rodata*)
+		*dvbdb_handle.o      (.rodata*)
+	    *dvbdb_network.o     (.rodata*)
+	    *dvbdb_multiplex.o   (.rodata*)
+	    *dvbdb_service.o     (.rodata*)
+	    *dvbdb_global.o      (.rodata*)
+	    *dvbdb_extended.o    (.rodata*)
+        *qsort.o             (.rodata*)
+        *dvbdb_additional.o  (.rodata*)
+
+        //terry,2005/10/18 05:41¤U¤È
+        /* dvb menu */
+        *dvb_password.o      (.text*)
+	    *dmx_6600_gpio.o     (.text*)
+	    *dvb_apmain_util.o   (.text*)
+	    *dvb_menu_util.o     (.text*)
+	    *dvb_menu.o          (.text*)
+	    *dvb_menu_str.o      (.text*)
+        *dvb_font.o          (.text*)
+	    *dvb_scan_menu.o     (.text*)
+	    *dvb_PinCode_menu.o  (.text*)
+	    *dvb_menu_setup.o    (.text*)
+	    *dvb_chan_edit.o     (.text*)
+	    *dvb_chan_list.o     (.text*)
+	    *dvb_chan_class.o    (.text*)
+	    *dvb_chan_lock.o     (.text*)
+	    *dvb_StateMachine.o  (.text*)
+	    *dvb_pop_list.o      (.text*)
+	    *dvb_apmain.o        (.text*)
+	    /**dvb_polling.o       (.text*)*/
+	    *dvb_game.o          (.text*)
+	    *dvb_ttx.o           (.text*)
+	    *wstfont2_compressed.o      (.text*)
+	    *dvb_menu_scanresult.o      (.text*)
+	    *dvb_booking.o       (.text*)
+	    *dvb_epg_browse.o    (.text*)
+        *dvb_system_msgbox.o (.text*)
+	    *channel_scan_data.o (.text*)
+	    *dvb_first_install.o (.text*)
+   	    *dvb_osd.o           (.text*)
+        *dvb_osd_util.o      (.text*)
+        *dvb_password.o      (.rodata*)
+	    *dmx_6600_gpio.o     (.rodata*)
+	    *dvb_apmain_util.o   (.rodata*)
+	    *dvb_bmp.o           (.rodata*)
+	    *dvb_menu_util.o     (.rodata*)
+	    *dvb_menu.o          (.rodata*)
+	    *dvb_menu_str.o      (.rodata*)
+	    *dvb_font.o          (.rodata*)
+	    *dvb_scan_menu.o     (.rodata*)
+	    *dvb_PinCode_menu.o  (.rodata*)
+	    *dvb_menu_setup.o    (.rodata*)
+	    *dvb_chan_edit.o     (.rodata*)
+	    *dvb_chan_list.o     (.rodata*)
+	    *dvb_chan_class.o    (.rodata*)
+	    *dvb_chan_lock.o     (.rodata*)
+	    *dvb_StateMachine.o  (.rodata*)
+	    *dvb_pop_list.o      (.rodata*)
+	    *dvb_apmain.o        (.rodata*)
+	    /**dvb_polling.o       (.rodata*)*/
+	    *dvb_game.o          (.rodata*)
+	    *dvb_ttx.o           (.rodata*)
+	    *wstfont2_compressed.o      (.rodata*)
+	    *dvb_menu_scanresult.o      (.rodata*)
+	    *dvb_booking.o       (.rodata*)
+	    *dvb_epg_browse.o    (.rodata*)
+        *dvb_system_msgbox.o (.rodata*)
+	    *channel_scan_data.o (.rodata*)
+	    *dvb_first_install.o (.rodata*)
+   	    *dvb_osd.o           (.rodata*)
+        *dvb_osd_util.o      (.rodata*)
+        
+        /* FTA(dvb func) */
+        *dvb_browser.o       (.text*)
+		*dvb_SI.o            (.text*)
+	    *fta.o               (.text*)
+	    *epg.o               (.text*)
+	    *ttx_interface.o     (.text*)
+	    *dvbsub.o            (.text*)
+	    *dvb_preview.o       (.text*)
+	    *PSI_Moniter.o       (.text*)
+	    *dvb_browser.o       (.text*)
+		*dvb_SI.o            (.text*)
+	    *fta.o               (.text*)
+	    *epg.o               (.text*)
+	    *ttx_interface.o     (.text*)
+	    *dvbsub.o            (.text*)
+	    *dvb_preview.o       (.text*)
+	    *PSI_Moniter.o       (.text*)
+        
+        /* dvb tuner */ //Jack mark:need enhance!
+        *TunerDrv.o          (.text*)
+        *TunerSysFunc.o      (.text*)
+        *TunerDrv.o          (.rodata*)
+        *TunerSysFunc.o      (.rodata*)
+        
+        /* demux */		
+        /**dmx_drv.o           (.text*)
+        *demux.o             (.text*)
+        *demux_srv.o         (.text*)
+        *demux_i2c.o         (.text*)
+        *ts_parser.o         (.text*)
+        *pcr.o               (.text*)
+        *dmx_drv.o           (.rodata*)
+        *demux.o             (.rodata*)
+        *demux_srv.o         (.rodata*)
+        *demux_i2c.o         (.rodata*)
+        *ts_parser.o         (.rodata*)
+        *pcr.o               (.rodata*) */
+        
+        /* TTX */
+        *bcd.o               (.text*)
+		*dvb_demux.o         (.text*)
+		*hamm.o              (.text*)
+		*lang.o              (.text*)
+		*misc.o              (.text*)
+		*packet.o            (.text*)
+		*teletext.o          (.text*)
+		*util_lib.o          (.text*)
+		*vbi.o               (.text*)
+		*wss.o               (.text*)
+		*bcd.o               (.rodata*)
+		*dvb_demux.o         (.rodata*)
+		*hamm.o              (.rodata*)
+		*lang.o              (.rodata*)
+		*misc.o              (.rodata*)
+		*packet.o            (.rodata*)
+		*teletext.o          (.rodata*)
+		*util_lib.o          (.rodata*)
+		*vbi.o               (.rodata*)
+		*wss.o               (.rodata*)        
+        
+        /*other*///Jack moved 06/03/03 
+
+#ifndef LOAD_NAV        
+        *nav.o      (.text*)        
+        *pgc.o      (.text*)      
+        *user_if.o  (.text*)
+        *ncmd.o     (.text*)
+        *ncmd_exe.o (.text*)
+        *vts.o      (.text*)
+        *vmg.o      (.text*)
+        *preview.o  (.rodata*)
+        *preview.o  (.text*)
+        *psd.o      (.rodata*)
+        *psd.o      (.text*)
+        *v11.o      (.rodata*)
+        *v11.o      (.text*)
+
+        *svcd.o     (.rodata*)
+        *svcd.o     (.text*)
+        *cdg.o      (.rodata*)
+        *cdg.o      (.text*)
+        *gf2m_c.o   (.text*)
+        *rs2420.o   (.text*)
+        *rs42.o     (.rodata*)
+        *rs42.o     (.text*)
+        *SubEcc.o (.rodata*)
+        *SubEcc.o (.text*)
+        
+        *navif.o    (.text*)
+        *book.o     (.text*)
+        *srv0.o     (.text*)
+        *srv1.o     (.text*)
+        *prvdrv.o   (.text*)
+        *int_decerr.o (.text*)
+        *supdec*.o   (.text*)
+        *slowback.o (.text*)
+        *cdfunc.o   (.text*)
+        *mainproc.o (.text*)
+        *sysmain2.o (.text*)
+        *dvdpe.o    (.text*)
+        *repeat.o   (.text*)
+        *viddec.o   (.rodata*)
+        *int_fld.o  (.text*)
+        *int_pend.o (.text*)
+        *genint.o   (.text*)
+
+#endif
+
+
+#ifndef LOAD_AP //LOAD_NAV        
+       // osd lib       2005/04/28 yltseng
+       *osd1.o               (.rodata*)
+       *osd3.o               (.rodata*)
+       *osdv2.o              (.rodata*)
+       *osd_midi.o           (.rodata*)
+       *osd_BmpUI.o          (.rodata*)
+       *osd_AppRegionInit.o  (.rodata*)
+       *osd_WndProc.o        (.rodata*)
+       *osd_ShowWarningBox.o (.rodata*)
+       *osd_customers.o      (.rodata*)
+       *osd_hw.o            (.rodata*)        
+       *osd_draw.o          (.rodata*)        
+       *osd_AppDraw.o       (.rodata*)  
+       *search.o       (.text*)
+       *search.o       (.rodata*)
+       *macro.o        (.text*)
+       *macro.o        (.rodata*)
+       *image.o        (.text*)
+       *iop.o          (.text*)
+       *cderr.o        (.text*)
+       *cderr.o        (.rodata*)
+       *hostx.o        (.text*)
+       *hostx.o        (.rodata*)
+       *dsp3_if.o      (.text*)
+       *dsp3_if.o      (.rodata*)
+       
+       // 2005/04/28 yltseng
+       *fs_file_ext_info_tab.o	(.text*)
+       *fs_file_ext_info_tab.o	(.rodata*)
+       *fs9660_util.o  (.text*)
+       *fs9660_util.o  (.rodata*)
+       *fsNav_util.o   (.text*)
+       *fsNav_util.o   (.rodata*)
+       *fsGUI_util.o   (.text*)
+       *fsGUI_util.o   (.rodata*)
+       *fsGUIShowFont.o (.text*)    // 2004/02/01 yltseng
+       *fsGUIShowFont.o(.rodata*)
+       *framebuf*.o     (.text*)
+
+       *sound.o        (.text*)
+       *fs.o           (.text*)
+       *fs.o           (.rodata*)
+       *vpp_728.o      (.text*)
+
+       *jpegeffect.o   (.rodata*)
+       *jpegeffect.o   (.text*)
+
+       //*jpegeffect_help.o   (.rodata*)
+       //*jpegeffect_help.o   (.text*)
+
+       *lbaif.o        (.rodata*)
+       *lbaif.o        (.text*)
+
+       *supintr.o      (.text*)
+       *viddec.o       (.text*)      
+
+       #ifdef LOAD_MP4     // 2004/12/16 yltseng
+        *viddec_mp4.o   (.text*)
+       #endif
+                
+       *time.o         (.text*)
+       *time.o         (.rodata*)
+
+       *vpp_728.o      (.rodata*)
+       *sp8200tv.o     (.text*)
+       *sp8200tv.o     (.rodata*)
+
+       *atapi_if.o     (.text*)
+       
+       #ifdef SUPPORT_MJPEG
+       *mjpeg.o	(.rodata*)
+       *mjpeg.o	(.text*)
+       #endif
+#endif//#ifdef LOAD_AP
+
+
+#ifndef LOAD_MP4
+
+#ifdef SUPPORT_MP4
+        *file_parser.o  (.text*)
+        *Subtitle.o     (.text*)
+        *fsNAV.o        (.text*)
+        *drm.o          (.text*)
+        *mp4vid.o       (.text*)
+        *mp4vid.o       (.rodata*)
+        *mp4vid.o       (.bss*)
+        *mp4vid.o       (COMMON*)
+        *mp4vid.o       (.sbss*)
+        *mp4vid.o       (.scommon*)       
+        *avi_if.o       (.text*)
+        *avi_if.o       (.rodata*)
+        *ShowMp4OSDText.o       (.text*)
+        *ShowMp4OSDText.o       (.rodata*)
+        *ShowMp4OSDText.o       (.bss*)
+        *ShowMp4OSDText.o       (COMMON*)
+        *ShowMp4OSDText.o       (.sbss*)
+        *ShowMp4OSDText.o       (.scommon*)
+        /*
+        *drm.o       (.text*)
+        *drm.o       (.rodata*)
+        *drm.o       (.bss*)
+        *drm.o       (COMMON*)
+        *drm.o       (.sbss*)
+        *drm.o       (.scommon*)               
+        //*drm_table.o (.rodata*)
+        */
+#endif //#ifdef SUPPORT_MP4        
+#endif //LOAD_MP4
+
+
+
+#ifndef LOAD_AP
+        
+       *ircmd.o        (.rodata*)
+       *ircmd.o        (.text*)
+       *ir_parser.o    (.rodata*)
+       *ir_parser.o    (.text*)
+       *ir_drv.o       (.text*)
+       *disp.o         (.rodata*)
+       *disp.o         (.text*)
+       *polling.o      (.text*)
+       *sound_if.o     (.text*)
+
+       *audif.o        (.text*)
+       *audif.o        (.rodata*)
+       
+       // auddrv lib    2005/04/28 yltseng
+       *auddac.o       (.text*)
+       *auddac.o       (.rodata*)
+       *dspkernel.o    (.text*)
+       *dspkernel.o    (.rodata*)
+       *dspcodecinfo.o (.text*)
+       *dspcodecinfo.o (.rodata*)
+       *audkernel.o    (.text*)
+       *audkernel.o    (.rodata*)
+       *auddrv.o       (.text*)
+       *auddrv.o       (.rodata*)
+       
+       // osd lib       2005/04/28 yltseng
+       *osd1.o               (.text*)
+       *osd3.o               (.text*)
+       *osdv2.o              (.text*)
+       *osd_midi.o           (.text*)
+       *osd_BmpUI.o          (.text*)
+       
+       *osd_AppRegionInit.o  (.text*)
+       *osd_WndProc.o        (.text*)
+       *osd_ShowWarningBox.o (.text*)
+       *osd_AppDraw.o        (.text*)
+       
+       *osd_customers.o      (.text*)       
+       *osd_hw.o             (.text*)
+       *osd_draw.o           (.text*)      
+       *vfd.o          (.rodata*)
+       *vfd.o          (.text*)       
+       *setup.o              (.text*) 
+       *setup.o              (.rodata*)
+               
+       #if defined(SUPPORT_MP4)||defined(SUPPORT_ID3)||defined(SUPPORT_OSDID3) //linrc 2004-11-08 10:57
+       *fs_message_show.o   (.rodata*)
+       *fs_message_show.o   (.text*)
+       #endif
+
+       *safe.o         (.rodata*)
+       *safe.o         (.text*)
+       *prog.o         (.rodata*)       
+#endif //LOAD_AP
+    
+#ifndef SUPPORT_SERVO_CODE_NOT_RUN_IN_SDRAM //20060612 tiany add    
+#ifndef LOAD_SERVO
+       *Servo.o        (.text*)
+       *Servo.o        (.rodata*)
+       *DecUtil.o      (.text*)
+       *DecUtil.o      (.rodata*)
+       *DecSubEcc.o    (.text*)
+       *DecSubEcc.o    (.rodata*)
+       *IdeMain.o      (.text*)
+       *IdeMain.o      (.rodata*)
+       *DecInit.o      (.text*)
+       *DecISR.o       (.text*)
+       *DecISR.o       (.rodata*)
+       *Atapicmd.o     (.text*)
+       *Atapicmd.o     (.rodata*)
+       *DecUpdt.o      (.text*)
+       *DecUpdt.o      (.rodata*)
+       *DSPCode.o      (.text*)
+       *SUtil.o        (.text*)
+       *Servoset.o     (.text*)
+       *TimerISR.o     (.text*)
+       *DecExUtil.o    (.text*)
+       *DecExUtil.o    (.rodata*)
+       *ServoSet.o     (.text*)
+       *ServoSet.o     (.rodata*)
+       *SrvCom.o       (.text*)
+#endif//LOAD_SERVO
+#endif//end=> #ifndef SUPPORT_SERVO_CODE_NOT_RUN_IN_SDRAM
+
+#ifndef LOAD_AP_OTHER //terry,2004/4/13 09:36PM
+       *avd.o          (.text*)
+       *timer.o        (.text*)
+       *ircode.o       (.rodata*)
+       *osdutil.o      (.rodata*)
+       *font_offset.o  (.rodata*)
+       *sound.o        (.rodata*)
+       *sysmain2.o     (.rodata*)       
+       *estd.o         (.text*) 
+       *supset.o       (.text*) 
+       *cvdogt.o       (.text*) 
+       *sup.o          (.text*) 
+     
+       *memcfg.o       (.text*) 
+       *util.o         (.text*) 
+       *nav_util.o     (.text*)
+       *read.o         (.text*)
+       *score.o        (.text*)
+       *kernel.o       (.text*)
+       *ninf.o         (.text*)
+       *_Xdivdi3.o     (.text*)
+       *setvideo.o     (.text*)
+       *cd.o           (.text*)
+       
+       *scsi.o         (.text*)
+       *ms.o           (.text*)  
+       *sd.o           (.text*)
+       
+#endif//LOAD_AP_OTHER
+
+      
+      
+        
+        
+#endif
+
+        .       = ALIGN(16);    
+    } > sdram_dvb
+}
+
+

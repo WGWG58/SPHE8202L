@@ -1,0 +1,151 @@
+#
+# Makefile.utl
+#
+.SUFFIXES:
+.PHONY:		all clean depends bak debug tar force
+
+
+IC_VER=8202
+
+
+#
+#
+#
+PREFIX          = package/
+PREFIX1         = 
+PERLPATH	= pl/
+
+
+#
+#
+#
+CC              = gcc
+CPP             = cpp -P -traditional
+AS              = as
+LD              = ld
+AR              = ar
+OBJDUMP         = objdump
+OBJCOPY         = objcopy
+OBJDUMP2BIN     = dump2bin
+WECHO           = wecho
+
+
+#
+# cross-compiling tools
+#
+DSP3            = dsp3/
+XCC             = $(CC)
+XAS             = $(AS)
+XLD             = $(LD)
+XAR             = $(AR)
+XRANLIB         = $(RANLIB)
+XOBJDUMP	= $(PREFIX1)$(OBJDUMP)
+
+#
+# CFLAGS
+#
+# modified by Jack Ciao for 1002 on 2006/08/28
+ifeq	(1002, ${IC_VER})
+	CFLAGS_MACHINE	= -membedded-data
+else
+	CFLAGS_MACHINE	= -m728 -membedded-data
+endif
+CFLAGS_ENDIAN	= -DLITTLE_ENDIAN
+
+CFLAGS_COPT	= \
+		-O2 -Os \
+		-fno-writable-strings \
+		-fstrength-reduce \
+		-fthread-jumps \
+		-ffixed-22 \
+		-fdata-sections \
+		-ffunction-sections \
+		# -fforce-mem \
+		# -fforce-addr \ 
+
+CFLAGS_C	= \
+		-g \
+		-W -Wall \
+		$(CFLAGS_COPT) \
+		$(CFLAGS_MACHINE) $(CFLAGS_ENDIAN)
+
+CFLAGS_S	= \
+		-g1 -O2 \
+		$(CFLAGS_MACHINE) $(CFLAGS_ENDIAN)
+
+INCLUDE_DIR	= \
+	      	-I. -I./h
+
+CFLAGS_MIPS	= $(CFLAGS_C) $(CFLAGS_COMPILE) $(INCLUDE_DIR)
+CFLAGS_MIPS_S	= $(CFLAGS_S) $(CFLAGS_COMPILE) $(INCLUDE_DIR)
+
+#
+#
+#
+PERL            = $(PREFIX1)perl 
+RM              = rm 
+CP              = cp 
+
+DUMP2BIN        = $(PREFIX1)$(OBJDUMP2BIN)
+ECHO            = $(PREFIX1)$(WECHO)
+MAKEIM          = $(PREFIX)makeim
+MAKEPM          = $(PREFIX)makepm
+FGZIP           = $(PREFIX1)fgzip
+FGZIP2          = $(PREFIX1)fgzip2
+RZIP            = $(PREFIX1)rzip
+BINOBJ          = $(PREFIX1)binobj
+FONT_PARSER     = $(PREFIX1)font_parse
+MODUAL          = $(PREFIX1)module
+XB2	        = $(PREFIX1)xb2
+CHKSUM	        = $(PREFIX1)checksum8200
+SRTFONTPARSE	= $(PREFIX1)SrtFontParse
+
+#
+# perl tools
+#
+DUMP2HEX        = $(PERL) $(PERLPATH)/dump2hex.pl
+HEX2BIN         = $(PERL) $(PERLPATH)/hex2bin.pl --byte
+MAKEDEP		= $(PERL) $(PERLPATH)/makedep.pl
+#DATE            := $(shell $(PERL) pl/date.pl)
+
+
+#
+# default rules
+#
+all:
+
+clean:
+	@$(ECHO) \"remove all generated files\"
+	@-$(RM) -f core *.o *.d *.s *.map *.dis *.obj MIPS/*.d MIPS/*.o
+
+depends: $(DEPENDS)
+	@$(ECHO) \"dependency made\"
+
+#
+# sub-rules
+#
+MIPS:
+	mkdir MIPS
+
+MIPS/%.o : MIPS/%.d
+
+MIPS/%.d : %.c
+	@$(ECHO) \"mkdep $*.c\"
+	@$(XCC) $(CFLAGS_MIPS) -M $< > depend.tmp
+	@$(MAKEDEP) depend.tmp $@
+
+MIPS/%.o : %.c
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -c -o $@ $<
+
+MIPS/%.o : %.S
+	@$(ECHO) \"assemble $<\"
+	@$(XCC) $(CFLAGS_MIPS_S) -c -o $@ $<
+
+MIPS/%.s : %.c
+	@$(ECHO) \"compile $<\"
+	@$(XCC) $(CFLAGS_MIPS) -S -fverbose-asm -o $@ $<
+
+%.dis : MIPS/%.o
+	@$(XOBJDUMP) --source -d --syms $< > $@
+

@@ -1,0 +1,14 @@
+#
+# Makefile.sutl
+#
+
+#
+sinclude	../Makefile.utl
+
+PREFIX          =
+PREFIX1         = ../package/
+PERLPATH	= ../pl/
+
+INCLUDE_DIR	= \
+	      	-I./ -I../ -I../h/ -I../ir_vfd/
+

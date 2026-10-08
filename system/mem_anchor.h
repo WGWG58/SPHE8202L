@@ -1,0 +1,89 @@
+/*
+*  Terry,2004/1/20 10:37AM
+*/
+//===========================================================anchor================================
+#ifdef SUPPORT_PREVIEW_9FRAMES
+static  const   UINT16  anchor_preview[] = {
+#ifdef  MEMCFG_COMPACT_MODE
+    M_REF0_LUMA,    M_REF1_LUMA,    M_BIDIR_LUMA,
+    M_REF0_CHROMA,  M_REF1_CHROMA,  M_BIDIR_CHROMA,
+    M_BIDIR_LUMA,   M_BIDIR_LUMA,   M_BIDIR_LUMA,
+    M_BIDIR_CHROMA, M_BIDIR_CHROMA, M_BIDIR_CHROMA,
+#else
+    P_REF0_LUMA,    P_REF1_LUMA,    P_BIDIR_LUMA,
+    P_REF0_CHROMA,  P_REF1_CHROMA,  P_BIDIR_CHROMA,
+    P_BIDIR_LUMA,   P_BIDIR_LUMA,   P_BIDIR_LUMA,
+    P_BIDIR_CHROMA, P_BIDIR_CHROMA, P_BIDIR_CHROMA,
+#endif
+};
+#endif
+static  const   UINT16  anchor_gn[] = 
+{ 
+    GN_REF0_LUMA,   GN_REF1_LUMA,   GN_REF0_LUMA,
+    GN_REF0_CHROMA, GN_REF1_CHROMA, GN_REF0_CHROMA,
+    GN_REF0_LUMA,   GN_REF1_LUMA,   GN_REF0_LUMA,
+    GN_REF0_CHROMA, GN_REF1_CHROMA, GN_REF0_CHROMA,
+};
+static  const   UINT16  anchor_gp[] = 
+{ 
+    GP_REF0_LUMA,   GP_REF1_LUMA,   GP_REF0_LUMA,
+    GP_REF0_CHROMA, GP_REF1_CHROMA, GP_REF0_CHROMA,
+    GP_REF0_LUMA,   GP_REF1_LUMA,   GP_REF0_LUMA,
+    GP_REF0_CHROMA, GP_REF1_CHROMA, GP_REF0_CHROMA,
+};
+static  const   UINT16  anchor_gs[] = 
+{ 
+    GS_REF0_LUMA,   GS_REF1_LUMA,   GS_REF0_LUMA,
+    GS_REF0_CHROMA, GS_REF1_CHROMA, GS_REF0_CHROMA,
+    GS_REF0_LUMA,   GS_REF1_LUMA,   GS_REF0_LUMA,
+    GS_REF0_CHROMA, GS_REF1_CHROMA, GS_REF0_CHROMA,
+};
+
+#ifdef SUPPORT_HD_RESOLUTION
+static  const   UINT16  anchor_ghd_1080i[] = 
+{ 
+    HD_GP_REF0_LUMA,   HD_GP_REF1_LUMA,   HD_GP_REF0_LUMA,
+    HD_GP_REF0_CHROMA, HD_GP_REF1_CHROMA, HD_GP_REF0_CHROMA,
+    HD_GP_REF0_LUMA,   HD_GP_REF1_LUMA,   HD_GP_REF0_LUMA,
+    HD_GP_REF0_CHROMA, HD_GP_REF1_CHROMA, HD_GP_REF0_CHROMA,
+};
+#endif
+
+#ifdef DVD_AUDIO
+static  const   UINT16  anchor_dvdaudio[] = 
+{ 
+    P_REF0_LUMA,    P_REF0_LUMA,    P_BIDIR_LUMA,
+    P_REF0_CHROMA,  P_REF0_CHROMA,  P_BIDIR_CHROMA,
+    P_REF0_LUMA,    P_REF0_LUMA,    P_BIDIR_LUMA,
+    P_REF0_CHROMA,  P_REF0_CHROMA,  P_BIDIR_CHROMA,
+};
+#endif
+#ifdef MEMCFG_COMPACT_MODE
+static  const   UINT16  anchor_compact[] = 
+{
+    N_REF0_LUMA,    N_REF1_LUMA,    N_BIDIR_LUMA,
+    N_REF0_CHROMA,  N_REF1_CHROMA,  N_BIDIR_CHROMA,
+    N_REF0_LUMA,    N_REF1_LUMA,    N_BIDIR_LUMA,
+    N_REF0_CHROMA,  N_REF1_CHROMA,  N_BIDIR_CHROMA,
+};
+#endif
+static  const   UINT16  anchor_dvdpal[] = 
+{
+    P_REF0_LUMA,    P_REF1_LUMA,    P_BIDIR_LUMA,
+    P_REF0_CHROMA,  P_REF1_CHROMA,  P_BIDIR_CHROMA,
+    P_REF0_LUMA,    P_REF1_LUMA,    P_BIDIR_LUMA,
+    P_REF0_CHROMA,  P_REF1_CHROMA,  P_BIDIR_CHROMA,
+};
+#ifdef SUPPORT_HIGH_DEFINITION_VIDEO
+static  const   UINT16  anchor_dvdHD[] = 
+{
+    HD_REF0_LUMA,    HD_REF1_LUMA,    HD_BIDIR_LUMA,
+    HD_REF0_CHROMA,  HD_REF1_CHROMA,  HD_BIDIR_CHROMA,
+    HD_REF0_LUMA,    HD_REF1_LUMA,    HD_BIDIR_LUMA,
+    HD_REF0_CHROMA,  HD_REF1_CHROMA,  HD_BIDIR_CHROMA,
+};
+#endif  //#ifdef SUPPORT_HIGH_DEFINITION_VIDEO
+//===========================================================anchor ending================================
+
+
+

@@ -1,0 +1,160 @@
+SECTIONS
+{
+/*===========================================================================
+* SDRAM 1 ,code ,rom data
+*=============================================================================*/
+    /*
+    *  navigation
+    */
+    .drv_dvd :
+    {
+        _text_drv_dvd = .;
+#if !defined(UNLOAD_ROMCODE)
+    #ifdef LOAD_NAV
+        *nav.o      (.text*)
+        
+        #ifndef DVD_AUDIO  //terry,2005/5/20 01:37¤U¤È
+        *pgc.o      (.text*)
+    #endif
+      
+        *user_if.o  (.text*)
+        *ncmd.o     (.text*)
+        *ncmd_exe.o (.text*)
+        *vts.o      (.text*)
+        *vmg.o      (.text*)
+    #ifndef DVB_DVD_8202
+        *preview.o  (.rodata*)
+        *preview.o  (.text*)
+    #endif        
+
+    #ifndef TURBO_DECODE //terry,2005/6/23 02:18¤U¤È, memory size too small,so
+        *cdg.o      (.rodata*)
+        *cdg.o      (.text*)
+        *gf2m_c.o   (.text*)
+        *rs2420.o   (.text*)
+        *rs42.o     (.rodata*)
+        *rs42.o     (.text*)
+        *SubEcc.o (.rodata*)
+        *SubEcc.o (.text*)
+    #endif
+        
+        *navif.o    (.text*)
+        *book.o     (.text*)
+        *srv0.o     (.text*)
+        *srv1.o     (.text*)
+    #if !defined(NINTAUS_DVD)&& !defined(HUAJIA_DVD)&& !defined(GBM_DVD)&& !defined(MINTON_DVD)||defined(NIN_612_4M) 
+        *prvdrv.o   (.text*)
+        *int_decerr.o (.text*)
+        *supdec*.o   (.text*)
+        *slowback.o (.text*)
+        //*cd.o       (.text*)    
+        *cdfunc.o   (.text*)
+        #if  !defined(PMP_DVD)       
+        *mainproc.o (.text*)
+        *sysmain2.o (.text*)
+        #endif //#if !defined(PMP_DVD)    
+        *dvdpe.o    (.text*)
+        //*audhw.o    (.text*)//nono 2004-6-22 18:40 for WHEN JPEG PLAYING, setting SPDIF item will reset.
+        //*cderr.o    (.text*)        
+        *repeat.o   (.text*)
+                
+        //cannot reduce rom code,        
+        *css-des.o  (.text*)   
+        *css-auth.o (.rodata*)
+        *css-auth.o (.text*)
+        *dvdauth.o  (.text*)
+        *dvdioctl.o (.text*)
+    #endif//!defined(NINTAUS_DVD)
+
+        *viddec.o   (.rodata*)
+        *int_fld.o  (.text*)
+        *int_pend.o (.text*)
+        *genint.o   (.text*)
+    #endif
+#endif
+
+//kevinmonkey 060418 kick these out since code grows too big
+//*psd.o      (.rodata*)
+//*psd.o      (.text*)
+//*v11.o      (.rodata*)
+//*v11.o      (.text*)
+//*svcd.o     (.rodata*)
+//*svcd.o     (.text*)
+
+        .       = ALIGN(16);
+    } > sdram_dvd
+
+
+    .drv_cdrom :
+    {
+        _text_drv_cdrom = .;
+    #ifndef UNLOAD_ROMCODE
+
+		#ifndef DVD_ESP_2S	//linrc for play CD system reset when define ESP_2S 2006-2-21 11:12
+        *fsCDDA.o   (.rodata*)//nono 4-9-1 12:01 move from sdram_drv1
+        *fsCDDA.o   (.text*)
+        #endif
+
+        #ifndef SUPPORT_MP4_SUBTITLE
+        *fsNAV.o       (.text*)
+        *fs_nav_upgrade.o      (.text*)
+        *fs_nav_upgrade.o      (.rodata*)        
+        #endif  //#ifndef SUPPORT_MP4_SUBTITLE
+
+        #ifdef LOAD_CDROM
+        *ThumbNav.o    (.rodata*)
+        *ThumbNav.o    (.text*)
+        *fsNAV.o       (.rodata*)
+
+    #ifndef JPG_OLD_PARSER_FLOW        
+        *pic_effect.o   (.rodata*)
+        *pic_effect.o   (.text*)
+    #endif        
+        
+            #ifndef PMP_DVD
+        *fsGUI.o       (.text*)     //fsgui_pub.c
+        *fsGUI.o       (.rodata*)
+            #endif  //#ifndef PMP_DVD
+ 
+        *udf.o         (.text*)
+        *udf.o         (.rodata*)
+        *fs9660.o      (.text*)
+        *fs9660.o      (.rodata*)
+    #ifndef SDRAM_16Mb_Mode    //kevinmonkey 060601 put this in CDROM section would cause VCD game to halt.
+        *NESInit.o     (.text*)
+    #endif
+        //*nesif.o       (.text*)
+        //*nesif.o       (.rodata*)
+            #if defined(SDRAM_16Mb_Mode)&&defined(SUPPORT_MP4)
+        ;//srv_cardfile is in fsfile.c, 16m mp4 will destroy CDROM code
+         //so either move srv_cardfile out of fsfile.c of not load fsfile.o to SDRAM
+            #else   //not 16m or 16m without avi
+        *fsFile.o      (.rodata*)
+        *fsFile.o      (.text*)
+            #endif  //decide if we load fsFile.o
+        *fsGUIX.o      (.text*)
+
+            #ifdef LOAD_AP
+                //nono 2004-10-10 13:20 move here from "drv_ap1".
+                #if !defined(BBK_DVD)&&!defined(NINTAUS_DVD)||defined(NIN_612_4M)  //terry,2003/12/17 06:18PM      
+       *graph.o        (.rodata*)
+       *graph.o        (.text*)
+                    #ifndef DIP_CFG_ENABLE      // 2005/03/02 yltseng
+       *atapi_if.o     (.text*)
+       //*atapi_.o       (.text*)
+                    #endif  //#ifndef DIP_CFG_ENABLE      // 2005/03/02 yltseng
+                    #if defined(LOAD_AP_OTHER)&&!defined(DVD_AUDIO)&&!defined(DVD_ESP_2S)//nono 2004-10-16 16:23
+        *cderr.o    (.text*) //kevinmonkey 050323 moved here since this conflicts with DIP_CFG_ENABLE as well
+                    #endif//#if defined(LOAD_AP_OTHER)&&!defined(DVD_AUDIO)&&!defined(DVD_ESP_2S)
+                #endif  // #if !defined(BBK_DVD)&&!defined(NINTAUS_DVD)||defined(NIN_612_4M)
+            #endif//#ifdef LOAD_AP
+        #endif  //#ifdef LOAD_CDROM
+
+    #endif  //#ifndef UNLOAD_ROMCODE
+        .       = ALIGN(16);
+    } > sdram_cdrom
+
+
+}
+
+

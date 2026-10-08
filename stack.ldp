@@ -1,0 +1,24 @@
+/*
+*   Terry,2004/7/26 01:50PM
+*  
+*/
+
+#ifdef SPHE8202 //terry,2004/7/27 09:39PM
+//#define STK_USE_DR
+#endif
+
+
+//------------------------------ stack pointer begin ------------------------------------
+#define STK_SIZE    (MAIN_TASK_SIZE+1)
+#ifdef STK_USE_DR
+#define STK_PTR     TO_DR(0,2)
+#define STK_BTM_PTR TO_DR(0,2-STK_SIZE)
+#else
+#define STK_PTR     TO080(A_MAIN_TASK_BOM)
+#define STK_BTM_PTR TO080(A_MAIN_TASK_BOM-STK_SIZE)
+#endif
+
+#define STK_DBG_PTR     TO080(A_DBG_TASK_BOM)
+#define STK_DBG_BTM_PTR TO080(A_DBG_TASK_BOM-DBG_STACK_SIZE)
+
+//--------------------------------ending--------------------------------------------------
